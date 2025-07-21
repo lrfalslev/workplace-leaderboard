@@ -1,0 +1,20 @@
+CREATE TABLE IF NOT EXISTS projectCoordinators (
+    id INTEGER PRIMARY KEY AUTOINCREMENT, 
+    name TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS topviews (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    projectCoordinatorId INTEGER NOT NULL,
+    date DATE NOT NULL,
+    numerator INTEGER NOT NULL,
+    denominator INTEGER NOT NULL,
+    FOREIGN KEY (projectCoordinatorId) REFERENCES projectCoordinators(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT, 
+    username TEXT NOT NULL UNIQUE,
+    password TEXT NOT NULL,
+    salt TEXT NOT NULL
+);

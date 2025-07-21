@@ -4,18 +4,13 @@ declare global {
 	namespace App {
         interface Platform {
             env: {
-                COUNTER: DurableObjectNamespace;
+                DB: D1Database;
             };
             context: {
                 waitUntil(promise: Promise<any>): void;
             };
             caches: CacheStorage & { default: Cache }
         }
-        // interface Platform {
-        //     env: Env
-        //     cf: CfProperties
-        //     ctx: ExecutionContext
-        // }
     }
 }
 
