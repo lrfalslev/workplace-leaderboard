@@ -3,8 +3,8 @@
 
     interface SummaryRow {
         coordinator: string;
-        totalNumerator: number;
-        totalDenominator: number;
+        totalFirstTimeApprovals: number;
+        totalSubmissions: number;
     }
 
     let summary: SummaryRow[] = [];
@@ -16,7 +16,7 @@
 
             if (response.ok && Array.isArray(data)) {
                 summary = data.sort(
-                    (a, b) => b.totalNumerator - a.totalNumerator
+                    (a, b) => b.totalFirstTimeApprovals - a.totalFirstTimeApprovals
                 );
             } else {
                 console.error('Unexpected summary format:', data);
@@ -61,10 +61,10 @@
             <span class="bar-label">{row.coordinator}</span>
             <div
                 class="bar-fill"
-                style="width: {row.totalNumerator * 20}px"
-                title="{row.totalNumerator} accepted"
+                style="width: {row.totalFirstTimeApprovals * 20}px"
+                title="{row.totalFirstTimeApprovals} accepted"
             ></div>
-            <span>{row.totalNumerator}</span>
+            <span>{row.totalFirstTimeApprovals}</span>
         </div>
     {/each}
 </div>

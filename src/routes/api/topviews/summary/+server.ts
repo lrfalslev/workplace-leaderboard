@@ -5,8 +5,8 @@ export const GET: RequestHandler = async function ({ platform }) {
         .prepare(`
             SELECT 
                 projectCoordinators.name AS coordinator,
-                SUM(topviews.numerator) AS totalNumerator,
-                SUM(topviews.denominator) AS totalDenominator
+                SUM(topviews.firstTimeApprovals) AS totalFirstTimeApprovals,
+                SUM(topviews.totalSubmissions) AS totalSubmissions
             FROM topviews
             JOIN projectCoordinators ON topviews.projectCoordinatorId = projectCoordinators.id
             GROUP BY topviews.projectCoordinatorId, coordinator
