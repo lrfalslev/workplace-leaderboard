@@ -6,10 +6,11 @@ export const GET: RequestHandler = async function ({ platform }) {
             SELECT 
                 topviews.date,
                 projectCoordinators.name AS coordinator,
+                projectCoordinators.id AS coordinatorId,
                 topviews.firstTimeApprovals,
                 topviews.totalSubmissions
-            FROM topviews
-            JOIN projectCoordinators ON topviews.projectCoordinatorId = projectCoordinators.id
+            FROM projectCoordinators
+            LEFT JOIN topviews ON topviews.projectCoordinatorId = projectCoordinators.id
         `)
         .all();
     return json(queryResult?.results);

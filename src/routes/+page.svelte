@@ -14,40 +14,30 @@
     let options: ApexOptions = {
         chart: {
             type: 'bar',
-            height: 400,
+            height: 600 ,
             toolbar: { show: false }
         },
         plotOptions: {
             bar: {
                 horizontal: true,
-                borderRadius: 6,
-                dataLabels: { position: 'top' }
             }
         },
         dataLabels: { enabled: false },
-        legend: { show: false },
         xaxis: {
             categories: [],
             labels: {
                 style: {
-                    fontFamily: 'Inter, sans-serif',
-                    cssClass: 'text-xs font-normal fill-gray-500 dark:fill-gray-400'
+                    cssClass: 'dark:fill-gray-400'
                 }
             }
         },
         yaxis: {
             labels: {
                 style: {
-                    fontFamily: 'Inter, sans-serif',
-                    cssClass: 'text-xs font-normal fill-gray-500 dark:fill-gray-400'
+                    cssClass: 'dark:fill-gray-400'
                 }
             }
-        },
-        grid: {
-            strokeDashArray: 4,
-            padding: { top: -20, right: 2, left: 2 }
-        },
-        series: []
+        }
     };
 
     onMount(async () => {
@@ -72,8 +62,8 @@
     });
 </script>
 
-<Card class="m-4 md:m-6">
-    <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex justify-center">
+<Card class="p-2">
+    <h2 class="text-xl font-semibold dark:text-white flex mt-2 justify-center">
         First Topviews Accepted
     </h2>
 

@@ -1,82 +1,57 @@
 <script lang="ts">
     import { onMount } from "svelte";
+    import { Table, TableBody, TableBodyCell, TableBodyRow, TableHead, TableHeadCell, Tooltip, Button, Input, table } from "flowbite-svelte";
+    import {  EditSolid, TrashBinSolid, CalendarPlusSolid } from "flowbite-svelte-icons";
+    import type { Placement } from "@floating-ui/utils";
 
-    type Coordinator = {
-        id: number;
-        name: string;
-    }
-
-    interface RawTopviewRow {
+    interface Topview {
         date: string;
         coordinator: string;
+        coordinatorId: number,
         firstTimeApprovals: number;
         totalSubmissions: number;
     }
 
-    type EditableRow = {
-        date: string;
-        data: {
-            [coordinatorId: number]: {
-                firstTimeApprovals: number;
-                totalSubmissions: number;
-            };
-        };
-    };
-
-    let coordinators: Coordinator[] = [];
     let name = '';
-    let editableTable: EditableRow[] = [];
+    let date = new Date().toLocaleDateString('en-CA');
+    console.log(date);
 
-    async function fetchCoordinators() {
-        try {
-            const response = await fetch('/api/project-coordinators');
-            const data = await response.json();
-
-            if (response.ok && Array.isArray(data)) {
-                coordinators = data;
-            } else {
-                console.error('Unexpected response format.', data);
-            }
-        } catch (err) {
-            console.error('Failed to fetch project coordinators.', err);
-        }
-    }
+    let coordinators: { id: number; name: string }[] = [];
+    let tableRows: Map<string, Topview[]> = new Map();
 
     async function fetchTopviews() {
+        coordinators = [];
+        tableRows = new Map();
         try {
             const response = await fetch('/api/topviews');
             const json = await response.json();
 
             if (response.ok && Array.isArray(json)) {
-                const raw = json as RawTopviewRow[];
-                const grouped = new Map<string, EditableRow>();
+                const topviews = json as Topview[];
 
-                for (const row of raw) {
-                    const coordinator = coordinators.find(c => c.name === row.coordinator);
-                    if (!coordinator) continue;
-
-                    if (!grouped.has(row.date)) {
-                        grouped.set(row.date, {
-                            date: row.date,
-                            data: {}
+                for (const topview of topviews) {
+                    if (!coordinators.find(c => c.id === topview.coordinatorId)) {
+                        coordinators.push({
+                            id: topview.coordinatorId,
+                            name: topview.coordinator
                         });
                     }
 
-                    grouped.get(row.date)!.data[coordinator.id] = {
-                        firstTimeApprovals: row.firstTimeApprovals,
-                        totalSubmissions: row.totalSubmissions
-                    };
-                }
+                    if (!topview.date) continue;
 
-                editableTable = Array.from(grouped.values()).sort(
-                    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-                );
+                    if (!tableRows.has(topview.date)) {
+                        tableRows.set(topview.date, []);
+                    }
+                    tableRows.get(topview.date)!.push(topview);
+                }
             } else {
                 console.error('Unexpected topviews format.', json);
             }
         } catch (err) {
             console.error('Failed to fetch topviews.', err);
         }
+        tableRows = new Map(tableRows);
+        coordinators = [...coordinators];
     }
 
     async function addCoordinator() {
@@ -93,12 +68,11 @@
             });
 
             if (!response.ok) {
-                alert('Failed to add coordinator');
+                alert('❌ Could not add project coordinator. Please try again.');
                 return;
             }
 
             name = '';
-            await fetchCoordinators();
             await fetchTopviews();
         } catch (err) {
             console.error('Error adding project coordinator.', err);
@@ -112,37 +86,20 @@
                 method: 'DELETE'
             });
 
-            if (response.ok) {
-                coordinators = coordinators.filter(c => c.id !== id);
-                await fetchTopviews();
-            } else {
-                console.error('Failed to delete coordinator');
+            if (!response.ok) {
+                alert('❌ Could not delete project coordinator. Please try again.');
             }
+
+            await fetchTopviews();
         } catch (err) {
-            console.error('Error deleting coordinator:', err);
-            alert('❌ Could not delete coordinator. Please try again.');
+            console.error('Error deleting coordinator.', err);
+            alert('❌ Could not delete project coordinator. Please try again.');
         }
     }
 
     function addEmptyRow() {
-        const today = new Date().toISOString().split('T')[0];
-        const blankRow: EditableRow = { date: today,
-            data: {}
-        };
-
-        for (const c of coordinators) {
-            blankRow.data[c.id] = {
-                firstTimeApprovals: 0,
-                totalSubmissions: 0
-            };
-        }
-
-        editableTable = [blankRow, ...editableTable];
-    }
-    
-    function formatCell(rowIdx: number, coordId: number): string {
-        const entry = editableTable[rowIdx].data[coordId];
-        return entry ? `${entry.firstTimeApprovals}/${entry.totalSubmissions}` : '';
+        tableRows.set(date, []);
+        tableRows = tableRows;
     }
 
     function updateValue(rowIdx: number, coordId: number, input: string) {
@@ -186,14 +143,61 @@
         }
     }
 
-
     onMount(() => {
-        fetchCoordinators();
         fetchTopviews();
     });
 </script>
 
 <div>
+    <div class="flex items-center gap-2 w-1/2">
+        <Input bind:value={name} type="text" placeholder="coordinator name" class="flex-1" />
+        <Button onclick={addCoordinator}>Add PC</Button>
+    </div>
+    <div class="flex items-center gap-2 w-1/2">
+        <Input bind:value={date} type="date" class="flex-1" />
+        <Button onclick={addEmptyRow}>Add Date</Button>
+    </div>
+    <Table class="text-center">
+      <TableHead>
+        <TableHeadCell>Date</TableHeadCell>
+        {#each coordinators as coordinator}
+            <TableHeadCell>
+                <div class="flex items-center gap-2">
+                    {coordinator.name}
+                    <EditSolid class="dark:text-gray-400 dark:hover:text-white" />
+                    <Button onclick={() => deleteCoordinator(coordinator.id)}>
+                        <TrashBinSolid class="dark:text-gray-400 dark:hover:text-red-800" />
+                    </Button>
+                </div>
+            </TableHeadCell>
+        {/each} 
+        <TableHeadCell> 
+            <span class="sr-only">Edit</span> 
+        </TableHeadCell>
+      </TableHead>
+      <TableBody>
+        {#each Array.from(tableRows.entries()) as [date, topviews]}
+            <TableBodyRow>
+                <TableBodyCell>{date}</TableBodyCell>
+                {#each coordinators as coordinator}
+                    {#if topviews.find(tv => tv.coordinatorId === coordinator.id)}
+                        {#each topviews.filter(tv => tv.coordinatorId === coordinator.id) as topview}
+                            <TableBodyCell>{topview.firstTimeApprovals}/{topview.totalSubmissions}</TableBodyCell>
+                        {/each}
+                    {:else}
+                        <TableBodyCell class="text-gray-400">—</TableBodyCell>
+                    {/if}
+                {/each}
+                <TableBodyCell>
+                    <a href="/tables" class="text-primary-600 dark:text-primary-500 font-medium hover:underline">Save</a>
+                </TableBodyCell>
+            </TableBodyRow>
+        {/each}
+      </TableBody>
+    </Table>
+</div>
+
+<!-- <div>
     {#each coordinators as coordinator}
       <div style="display: flex; align-items: center; gap: 0.5rem;">
         <span>{coordinator.name}</span>
@@ -267,4 +271,4 @@
             </tr>
         {/each}
     </tbody>
-</table>
+</table> -->
