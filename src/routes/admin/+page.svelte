@@ -150,21 +150,22 @@
 
 <div>
     <div class="flex items-center gap-2 w-1/2">
-        <Input bind:value={name} type="text" placeholder="coordinator name" class="flex-1" />
+        <Input bind:value={name} type="text" placeholder="coordinator name" class="flex-1" onkeydown={(e) => e.key === 'Enter' && addCoordinator()}/>
         <Button onclick={addCoordinator}>Add PC</Button>
     </div>
     <div class="flex items-center gap-2 w-1/2">
-        <Input bind:value={date} type="date" class="flex-1" />
+        <Input bind:value={date} type="date" class="flex-1" onkeydown={(e) => e.key === 'Enter' && addEmptyRow()}/>
         <Button onclick={addEmptyRow}>Add Date</Button>
     </div>
     <Table class="text-center">
       <TableHead>
         <TableHeadCell>Date</TableHeadCell>
         {#each coordinators as coordinator}
-            <TableHeadCell>
+            <TableHeadCell class="group">
                 <div class="flex items-center gap-2">
                     {coordinator.name}
-                    <EditSolid class="dark:text-gray-400 dark:hover:text-white" />
+                    <EditSolid class="opacity-0 group-hover:opacity-100 dark:text-gray-400 dark:hover:text-white cursor-pointer" />
+                    <Tooltip type="dark">Edit</Tooltip>
                     <Button onclick={() => deleteCoordinator(coordinator.id)}>
                         <TrashBinSolid class="dark:text-gray-400 dark:hover:text-red-800" />
                     </Button>
