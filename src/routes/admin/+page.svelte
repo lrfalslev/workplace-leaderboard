@@ -1,29 +1,17 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import { Table, TableBody, TableBodyCell, TableBodyRow, TableHead, TableHeadCell, Tooltip, Button, Input, Modal, Popover } from "flowbite-svelte";
-    import {  EditSolid, TrashBinSolid, CalendarPlusSolid } from "flowbite-svelte-icons";
-    import type { Placement } from "@floating-ui/utils";
+    import { Table, TableBody, TableHead, TableHeadCell, Button, Input, Modal, Popover } from "flowbite-svelte";
+    import {  EditSolid, TrashBinSolid } from "flowbite-svelte-icons";
     import EditableRow from "./components/EditableRow.svelte";
-
-    interface Topview {
-        date: string;
-        coordinator: string;
-        coordinatorId: number,
-        firstTimeApprovals: number;
-        totalSubmissions: number;
-    }
-
-    interface Coordinator {
-        id: number;
-        name: string;
-    }
+    import type { Topview, Coordinator } from './types/topview';
 
     let name = '';
     let date = new Date().toLocaleDateString('en-CA');
+    
     let editModal = false;
+    let deleteModal = false;
     let selectedCoordinator: Coordinator | null = null;
     let updatedName = '';
-    let deleteModal = false;
 
     let coordinators: Coordinator[] = [];
     let tableRows: Map<string, Topview[]> = new Map();
@@ -136,47 +124,6 @@
         tableRows = tableRows;
     }
 
-    function updateValue(rowIdx: number, coordId: number, input: string) {
-        const [first, total] = input.split('/').map(n => parseInt(n) || 0);
-        editableTable[rowIdx].data[coordId] = {
-            firstTimeApprovals: first,
-            totalSubmissions: total
-        };
-    }
-
-    async function submitRow(row: EditableRow) {
-        const payload = [];
-
-        for (const c of coordinators) {
-            const entry = row.data[c.id];
-            if (!entry) continue;
-
-            payload.push({
-                projectCoordinatorId: c.id,
-                date: row.date,
-                firstTimeApprovals: entry.firstTimeApprovals,
-                totalSubmissions: entry.totalSubmissions
-            });
-        }
-
-        try {
-            const res = await fetch('/api/topviews', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-
-            if (res.ok) {
-                alert('✅ Row saved!');
-                await fetchTopviews();
-            } else {
-                alert('❌ Save failed');
-            }
-        } catch (err) {
-            console.error('Submission error:', err);
-        }
-    }
-
     onMount(() => {
         fetchTopviews();
     });
@@ -225,25 +172,8 @@
         </TableHeadCell>
       </TableHead>
       <TableBody>
-        <EditableRow {coordinators} {date} />
         {#each Array.from(tableRows.entries()).sort((a, b) => b[0].localeCompare(a[0])) as [date, topviews]}
-            <TableBodyRow>
-                <TableBodyCell>{date}</TableBodyCell>
-                {#each coordinators as coordinator}
-                    {#if topviews.find(tv => tv.coordinatorId === coordinator.id)}
-                        {#each topviews.filter(tv => tv.coordinatorId === coordinator.id) as topview}
-                            <TableBodyCell>{topview.firstTimeApprovals}/{topview.totalSubmissions}</TableBodyCell>
-                        {/each}
-                    {:else}
-                        <TableBodyCell class="text-gray-400">—</TableBodyCell>
-                    {/if}
-                {/each}
-                <TableBodyCell>
-                    <button class="cursor-pointer" onclick={() => {}}>
-                        <EditSolid class="dark:text-gray-400 dark:hover:text-white" />
-                    </button>
-                </TableBodyCell>
-            </TableBodyRow>
+            <EditableRow {coordinators} {date} {topviews} />
         {/each}
       </TableBody>
     </Table>
