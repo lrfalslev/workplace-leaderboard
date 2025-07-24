@@ -3,6 +3,7 @@
     import { Table, TableBody, TableBodyCell, TableBodyRow, TableHead, TableHeadCell, Tooltip, Button, Input, Modal, Popover } from "flowbite-svelte";
     import {  EditSolid, TrashBinSolid, CalendarPlusSolid } from "flowbite-svelte-icons";
     import type { Placement } from "@floating-ui/utils";
+    import EditableRow from "./components/EditableRow.svelte";
 
     interface Topview {
         date: string;
@@ -24,7 +25,7 @@
     let updatedName = '';
     let deleteModal = false;
 
-    let coordinators: { id: number; name: string }[] = [];
+    let coordinators: Coordinator[] = [];
     let tableRows: Map<string, Topview[]> = new Map();
 
     async function fetchTopviews() {
@@ -197,7 +198,7 @@
         <TableHeadCell>Date</TableHeadCell>
         {#each coordinators as coordinator}
             <TableHeadCell class="group relative">
-                <div class="flex items-center gap-2">
+                <div class="flex justify-center gap-2">
                     {coordinator.name}
                     <Popover>
                         <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -224,6 +225,7 @@
         </TableHeadCell>
       </TableHead>
       <TableBody>
+        <EditableRow {coordinators} {date} />
         {#each Array.from(tableRows.entries()).sort((a, b) => b[0].localeCompare(a[0])) as [date, topviews]}
             <TableBodyRow>
                 <TableBodyCell>{date}</TableBodyCell>
@@ -237,7 +239,9 @@
                     {/if}
                 {/each}
                 <TableBodyCell>
-                    <a href="/tables" class="text-primary-600 dark:text-primary-500 font-medium hover:underline">Save</a>
+                    <button class="cursor-pointer" onclick={() => {}}>
+                        <EditSolid class="dark:text-gray-400 dark:hover:text-white" />
+                    </button>
                 </TableBodyCell>
             </TableBodyRow>
         {/each}
