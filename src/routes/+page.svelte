@@ -64,7 +64,7 @@
     });
 </script>
 
-<Card class="p-2 md:pr-8 m-8 w-full md:max-w-screen-lg">
+<Card class="p-2 md:pr-8 m-12 lg:m-0 w-full md:max-w-screen-lg">
     <h2 class="text-xl font-semibold dark:text-white flex mt-4 justify-center">
         First Topviews Accepted
     </h2>

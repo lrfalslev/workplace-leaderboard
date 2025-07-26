@@ -129,8 +129,8 @@
     });
 </script>
 
-<div>
-    <div class="flex items-center">
+<div class="max-h-[80vh] overflow-y-auto  w-[80vw] max-w-full table-fixed mx-auto">
+    <div class="flex items-center sticky top-0 z-30 mb-2 bg-gray-700">
         <div class="flex gap-2 w-1/2 m-2">
             <Input bind:value={name} type="text" placeholder="coordinator name" class="flex-1" onkeydown={(e) => e.key === 'Enter' && addCoordinator()}/>
             <Button class="cursor-pointer" onclick={addCoordinator}>Add PC</Button>
@@ -140,70 +140,70 @@
             <Button class="cursor-pointer" onclick={addEmptyRow}>Add Date</Button>
         </div>
     </div>
-    <Table class="text-center">
-      <TableHead>
-        <TableHeadCell>Date</TableHeadCell>
-        {#each coordinators as coordinator}
-            <TableHeadCell class="group relative">
-                <div class="flex justify-center gap-2">
-                    {coordinator.name}
-                    <Popover>
-                        <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button class="cursor-pointer" onclick={() => {
-                                selectedCoordinator = coordinator;
-                                updatedName = coordinator.name;
-                                editModal = true;
-                            }}>
-                                <EditSolid class="dark:text-gray-400 dark:hover:text-white" />
-                            </button>
-                            <button class="cursor-pointer" onclick={() => {
-                                selectedCoordinator = coordinator;
-                                deleteModal = true;
-                            }}>
-                                <TrashBinSolid class="dark:text-gray-400 dark:hover:text-red-800" />
-                            </button>
-                        </div>
-                    </Popover>
-                </div>
+    <Table class="text-center table-fixed">
+        <TableHead>
+            <TableHeadCell>Date</TableHeadCell>
+            {#each coordinators as coordinator}
+                <TableHeadCell class="group relative">
+                    <div class="flex justify-center gap-2">
+                        {coordinator.name}
+                        <Popover>
+                            <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button class="cursor-pointer" onclick={() => {
+                                    selectedCoordinator = coordinator;
+                                    updatedName = coordinator.name;
+                                    editModal = true;
+                                }}>
+                                    <EditSolid class="dark:text-gray-400 dark:hover:text-white" />
+                                </button>
+                                <button class="cursor-pointer" onclick={() => {
+                                    selectedCoordinator = coordinator;
+                                    deleteModal = true;
+                                }}>
+                                    <TrashBinSolid class="dark:text-gray-400 dark:hover:text-red-800" />
+                                </button>
+                            </div>
+                        </Popover>
+                    </div>
+                </TableHeadCell>
+            {/each} 
+            <TableHeadCell> 
+                <span class="sr-only">Edit</span> 
             </TableHeadCell>
-        {/each} 
-        <TableHeadCell> 
-            <span class="sr-only">Edit</span> 
-        </TableHeadCell>
-      </TableHead>
-      <TableBody>
-        {#each Array.from(tableRows.entries()).sort((a, b) => b[0].localeCompare(a[0])) as [date, topviews]}
-            <EditableRow {coordinators} {date} {topviews} />
-        {/each}
-      </TableBody>
+        </TableHead>
+        <TableBody>
+            {#each Array.from(tableRows.entries()).sort((a, b) => b[0].localeCompare(a[0])) as [date, topviews]}
+                <EditableRow {coordinators} {date} {topviews} />
+            {/each}
+        </TableBody>
     </Table>
-    <Modal form bind:open={editModal} size="xs" class="pt-8 text-center" onaction={async ({ action }) => {
-        if (action === 'success' && selectedCoordinator) {
-            {editCoordinator()}
-            editModal = false;
-        } else if (action === 'decline') {
-            editModal = false;
-            selectedCoordinator = null;
-        }
-        }}>
-        <Input bind:value={updatedName} type="text" name="coordinator" required  />
-        <Button class="mr-1" type="submit" value="success">Save</Button>
-        <Button type="submit" value="decline" color="alternative">Cancel</Button>
-    </Modal>
-    <Modal form bind:open={deleteModal} size="xs" class="pt-8 text-center" onaction={async ({ action }) => {
-        if (action === 'success' && selectedCoordinator) {
-            {deleteCoordinator(selectedCoordinator.id)}
-            deleteModal = false;
-        } else if (action === 'decline') {
-            deleteModal = false;
-            selectedCoordinator = null;
-        }
-        }}>
-        <p>
-            Delete <strong>{selectedCoordinator?.name}</strong> and all their topviews?<br />
-            <span class="text-red-400">This action cannot be undone.</span>
-        </p>
-        <Button class="mr-2" type="submit" value="success">Delete</Button>
-        <Button type="submit" value="decline" color="alternative">Cancel</Button>
-    </Modal>
 </div>
+<Modal form bind:open={editModal} size="xs" class="pt-8 text-center" onaction={async ({ action }) => {
+    if (action === 'success' && selectedCoordinator) {
+        {editCoordinator()}
+        editModal = false;
+    } else if (action === 'decline') {
+        editModal = false;
+        selectedCoordinator = null;
+    }
+    }}>
+    <Input bind:value={updatedName} type="text" name="coordinator" required  />
+    <Button class="mr-1" type="submit" value="success">Save</Button>
+    <Button type="submit" value="decline" color="alternative">Cancel</Button>
+</Modal>
+<Modal form bind:open={deleteModal} size="xs" class="pt-8 text-center" onaction={async ({ action }) => {
+    if (action === 'success' && selectedCoordinator) {
+        {deleteCoordinator(selectedCoordinator.id)}
+        deleteModal = false;
+    } else if (action === 'decline') {
+        deleteModal = false;
+        selectedCoordinator = null;
+    }
+    }}>
+    <p>
+        Delete <strong>{selectedCoordinator?.name}</strong> and all their topviews?<br />
+        <span class="text-red-400">This action cannot be undone.</span>
+    </p>
+    <Button class="mr-2" type="submit" value="success">Delete</Button>
+    <Button type="submit" value="decline" color="alternative">Cancel</Button>
+</Modal>

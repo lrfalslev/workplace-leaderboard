@@ -83,10 +83,12 @@
         {/key}
     {/each}
 
-    <TableBodyCell>
+    <TableBodyCell >
         {#if editing}
-            <Button type="submit" class="cursor-pointer">Save</Button>
-            <Button type="submit" class="cursor-pointer" onclick={() => {editing = false;}}>Cancel</Button>
+            <div class="flex flex-col gap-1 items-center items-stretch">
+                <Button type="submit" class="px-2 py-1 text-sm cursor-pointer ">Save</Button>
+                <Button type="submit" class="px-2 py-1 text-sm cursor-pointer" onclick={() => {editing = false;}}>Cancel</Button>
+            </div>
         {:else}
             <button class="cursor-pointer" onclick={() => {editing = true;}}>
                 <EditSolid class="dark:text-gray-400 dark:hover:text-white"/>
