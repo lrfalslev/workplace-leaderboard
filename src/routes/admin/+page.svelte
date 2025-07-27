@@ -5,16 +5,16 @@
     import EditableRow from "./components/EditableRow.svelte";
     import type { Topview, Coordinator } from './types/topview';
     
-    let name = '';
+    let name = $state('');
     let date = new Date().toLocaleDateString('en-CA');
     
-    let editModal = false;
-    let deleteModal = false;
+    let editModal = $state(false);
+    let deleteModal = $state(false);
     let selectedCoordinator: Coordinator | null = null;
-    let updatedName = '';
+    let updatedName = $state('');
 
-    let coordinators: Coordinator[] = [];
-    let topviewsArray: Array<Record<string | number, any>> = [];
+    let coordinators: Coordinator[] = $state([]);
+    let topviewsArray: Array<Record<string | number, any>> = $state([]);
 
     async function fetchCoordinators() {
         try {
@@ -53,7 +53,8 @@
                     };
                 }
 
-                topviewsArray = topviewsArray;
+                topviewsArray.sort((a, b) => b.date.localeCompare(a.date));
+
             } else {
                 console.error('Unexpected topviews format.', json);
             }
@@ -81,7 +82,7 @@
             }
 
             name = '';
-            await fetchTopviews();
+            fetchCoordinators();
         } catch (err) {
             console.error('Error adding project coordinator.', err);
             alert('❌ Could not add project coordinator. Please try again.');
@@ -104,9 +105,9 @@
                 return;
             }
 
+            selectedCoordinator.name = trimmed;
             selectedCoordinator = null;
             updatedName = '';
-            await fetchTopviews();
         } catch (err) {
             console.error('Error editing project coordinator.', err);
             alert('❌ Could not update name. Please try again.');
@@ -123,16 +124,23 @@
                 alert('❌ Could not delete project coordinator. Please try again.');
             }
 
-            await fetchTopviews();
+            const index = coordinators.findIndex(c => c.id === id);
+            if (index !== -1) {
+                coordinators.splice(index, 1);
+            }
         } catch (err) {
             console.error('Error deleting coordinator.', err);
             alert('❌ Could not delete project coordinator. Please try again.');
         }
     }
 
-    function addEmptyRow() {
-        // topviewsArray.set(date, []);
-        // tableRows = tableRows;
+    function addNewRow() {
+        let dayEntry = topviewsArray.find(entry => entry.date === date);
+
+        if (!dayEntry) {
+            dayEntry = { date: date };
+            topviewsArray.unshift(dayEntry);
+        }
     }
 
     onMount(() => {
@@ -148,8 +156,8 @@
             <Button class="cursor-pointer" onclick={addCoordinator}>Add PC</Button>
         </div>
         <div class="flex gap-2 w-1/2 m-2">
-            <Input bind:value={date} type="date" class="flex-1" onkeydown={(e) => e.key === 'Enter' && addEmptyRow()}/>
-            <Button class="cursor-pointer" onclick={addEmptyRow}>Add Date</Button>
+            <Input bind:value={date} type="date" class="flex-1" onkeydown={(e) => e.key === 'Enter' && addNewRow()}/>
+            <Button class="cursor-pointer" onclick={addNewRow}>Add Date</Button>
         </div>
     </div>
     <Table class="text-center w-full">
