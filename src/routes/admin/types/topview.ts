@@ -1,6 +1,5 @@
 export interface Topview {
     date: string;
-    coordinator: string;
     coordinatorId: number;
     firstTimeApprovals: number;
     totalSubmissions: number;

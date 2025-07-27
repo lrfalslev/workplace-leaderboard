@@ -4,7 +4,7 @@
     import {  EditSolid, TrashBinSolid } from "flowbite-svelte-icons";
     import EditableRow from "./components/EditableRow.svelte";
     import type { Topview, Coordinator } from './types/topview';
-
+    
     let name = '';
     let date = new Date().toLocaleDateString('en-CA');
     
@@ -14,41 +14,52 @@
     let updatedName = '';
 
     let coordinators: Coordinator[] = [];
-    let tableRows: Map<string, Topview[]> = new Map();
+    let topviewsArray: Array<Record<string | number, any>> = [];
+
+    async function fetchCoordinators() {
+        try {
+            const response = await fetch('/api/project-coordinators');
+            const data = await response.json();
+
+            if (response.ok && Array.isArray(data)) {
+                coordinators = data;
+            } else {
+                console.error('Unexpected response format:', data);
+            }
+        } catch (err) {
+            console.error('Failed to fetch topviews:', err);
+        }
+    }
 
     async function fetchTopviews() {
-        coordinators = [];
-        tableRows = new Map();
         try {
             const response = await fetch('/api/topviews');
             const json = await response.json();
 
             if (response.ok && Array.isArray(json)) {
-                const topviews = json as Topview[];
+                const topviewsRaw = json as Topview[];
+                
+                for (const topview of topviewsRaw) {
+                    let dayEntry = topviewsArray.find(entry => entry.date === topview.date);
 
-                for (const topview of topviews) {
-                    if (!coordinators.find(c => c.id === topview.coordinatorId)) {
-                        coordinators.push({
-                            id: topview.coordinatorId,
-                            name: topview.coordinator
-                        });
+                    if (!dayEntry) {
+                        dayEntry = { date: topview.date };
+                        topviewsArray.push(dayEntry);
                     }
-
-                    if (!topview.date) continue;
-
-                    if (!tableRows.has(topview.date)) {
-                        tableRows.set(topview.date, []);
-                    }
-                    tableRows.get(topview.date)!.push(topview);
+                    
+                    dayEntry[topview.coordinatorId] = {
+                        firstTimeApprovals: topview.firstTimeApprovals,
+                        totalSubmissions: topview.totalSubmissions
+                    };
                 }
+
+                topviewsArray = topviewsArray;
             } else {
                 console.error('Unexpected topviews format.', json);
             }
         } catch (err) {
             console.error('Failed to fetch topviews.', err);
         }
-        tableRows = new Map(tableRows);
-        coordinators = [...coordinators];
     }
 
     async function addCoordinator() {
@@ -120,11 +131,12 @@
     }
 
     function addEmptyRow() {
-        tableRows.set(date, []);
-        tableRows = tableRows;
+        // topviewsArray.set(date, []);
+        // tableRows = tableRows;
     }
 
     onMount(() => {
+        fetchCoordinators();
         fetchTopviews();
     });
 </script>
@@ -140,7 +152,7 @@
             <Button class="cursor-pointer" onclick={addEmptyRow}>Add Date</Button>
         </div>
     </div>
-    <Table class="text-center table-fixed">
+    <Table class="text-center w-full">
         <TableHead>
             <TableHeadCell>Date</TableHeadCell>
             {#each coordinators as coordinator}
@@ -172,8 +184,8 @@
             </TableHeadCell>
         </TableHead>
         <TableBody>
-            {#each Array.from(tableRows.entries()).sort((a, b) => b[0].localeCompare(a[0])) as [date, topviews]}
-                <EditableRow {coordinators} {date} {topviews} />
+            {#each topviewsArray as topviews}
+                <EditableRow {coordinators} {topviews} />
             {/each}
         </TableBody>
     </Table>

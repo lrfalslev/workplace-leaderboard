@@ -1,25 +1,28 @@
 <script lang="ts">
-    import { TableBodyRow, TableBodyCell, Input, Button } from "flowbite-svelte";
+    import { TableBodyRow, TableBodyCell, Input, Button, tooltip } from "flowbite-svelte";
     import {  EditSolid } from "flowbite-svelte-icons";
     import type { Topview, Coordinator } from '../types/topview';
 
     export let coordinators: Coordinator[];
-    export let topviews: Topview[] = [];
-    export let date: string;
+    export let topviews: Record<string | number, any>;
     export let editing = false;
-    let topviewInputs = coordinators.map(() => ({
-        firstTimeApprovals: 0,
-        totalSubmissions: 0
-    }));
 
     async function submitTopviews() {
-        const payload = coordinators.map((c, index) => ({
-            projectCoordinatorId: c.id,
-            date,
-            firstTimeApprovals: topviewInputs[index].firstTimeApprovals,
-            totalSubmissions: topviewInputs[index].totalSubmissions
-        }));
+        const payload = [];
+        const { date, ...coordinators } = topviews;
 
+        for (const coordinatorId in coordinators) {
+            const metrics = coordinators[coordinatorId];
+
+            payload.push({
+                projectCoordinatorId: Number(coordinatorId),
+                date,
+                firstTimeApprovals: metrics.firstTimeApprovals,
+                totalSubmissions: metrics.totalSubmissions
+            });
+        }
+
+        console.log("update payload:", payload);
         try {
             const response = await fetch('/api/topviews', {
                 method: 'POST',
@@ -27,54 +30,40 @@
                 body: JSON.stringify(payload)
             });
 
-            if (!response.ok) {
-                alert('❌ Could not save topviews. Please try again.');
-                return;
-            }
+            if (!response.ok) throw new Error("Failed to save");
 
+            editing = false;
         } catch (err) {
             console.error('Error updating topviews.', err);
             alert('❌ Could not save topviews. Please try again.');
-        }
-
-        try {
-            const res = await fetch("/api/topviews", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload),
-            });
-
-            if (!res.ok) throw new Error("Failed to save");
-
-            // Optional: Show success, reset, invalidate, etc.
-            console.log("Saved:", await res.json());
-        } catch (err) {
-            console.error("Error saving topviews:", err);
         }
     }
 </script>
 
 <TableBodyRow>
-    <TableBodyCell>{date}</TableBodyCell>
+    <TableBodyCell>{topviews.date}</TableBodyCell>
     
     {#each coordinators as coordinator}
         {#key coordinator.id}
             <TableBodyCell class="text-gray-400">
                 {#if editing}
-                    {#if topviews.find(tv => tv.coordinatorId === coordinator.id)}
-                        {#each topviews.filter(tv => tv.coordinatorId === coordinator.id) as topview}
-                            <Input id="firstTimeApprovals" value={topview.firstTimeApprovals} size="sm" class="mb-1" />
-                            <Input id="totalSubmissions" value={topview.totalSubmissions} size="sm" class="mt-1" />
-                        {/each}
-                    {:else}
-                        <Input id="firstTimeApprovals" placeholder="accepted" size="sm" class="mb-1" />
-                        <Input id="totalSubmissions" placeholder="total" size="sm" class="mt-1" />
-                    {/if}
+                    <Input 
+                        id="firstTimeApprovals" 
+                        value={topviews[coordinator.id]?.firstTimeApprovals ?? ''}
+                        placeholder="accepted"
+                        size="sm"
+                        class="mb-1"
+                    />
+                    <Input
+                        id="totalSubmissions"
+                        value={topviews[coordinator.id]?.totalSubmissions ?? ''}
+                        placeholder="total"
+                        size="sm"
+                        class="mt-1"
+                    />
                 {:else}
-                    {#if topviews.find(tv => tv.coordinatorId === coordinator.id)}
-                        {#each topviews.filter(tv => tv.coordinatorId === coordinator.id) as topview}
-                            {topview.firstTimeApprovals}/{topview.totalSubmissions}
-                        {/each}
+                    {#if topviews[coordinator.id]}
+                        {topviews[coordinator.id].firstTimeApprovals}/{topviews[coordinator.id].totalSubmissions}
                     {:else}
                         —
                     {/if}
@@ -86,7 +75,7 @@
     <TableBodyCell >
         {#if editing}
             <div class="flex flex-col gap-1 items-center items-stretch">
-                <Button type="submit" class="px-2 py-1 text-sm cursor-pointer ">Save</Button>
+                <Button type="submit" class="px-2 py-1 text-sm cursor-pointer" onclick={submitTopviews}>Save</Button>
                 <Button type="submit" class="px-2 py-1 text-sm cursor-pointer" onclick={() => {editing = false;}}>Cancel</Button>
             </div>
         {:else}
