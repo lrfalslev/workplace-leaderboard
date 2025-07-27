@@ -1,28 +1,32 @@
 <script lang="ts">
-    import { TableBodyRow, TableBodyCell, Input, Button, tooltip } from "flowbite-svelte";
+    import { TableBodyRow, TableBodyCell, Input, Button } from "flowbite-svelte";
     import {  EditSolid } from "flowbite-svelte-icons";
-    import type { Topview, Coordinator } from '../types/topview';
+    import type { Coordinator } from '../types/topview';
 
     export let coordinators: Coordinator[];
-    export let topviews: Record<string | number, any>;
+    export let topviews: Record<string | number, any>;    
     export let editing = false;
+    let formInputs: Record<number, { firstTimeApprovals: number; totalSubmissions: number }> = {};
+
+    $: if (editing) {
+        formInputs = {};
+        for (const coordinator of coordinators) {
+            const current = topviews[coordinator.id] || { firstTimeApprovals: 0, totalSubmissions: 0 };
+            formInputs[coordinator.id] = {
+                firstTimeApprovals: current.firstTimeApprovals,
+                totalSubmissions: current.totalSubmissions
+            };
+        }
+    }
 
     async function submitTopviews() {
-        const payload = [];
-        const { date, ...coordinators } = topviews;
-
-        for (const coordinatorId in coordinators) {
-            const metrics = coordinators[coordinatorId];
-
-            payload.push({
-                projectCoordinatorId: Number(coordinatorId),
-                date,
-                firstTimeApprovals: metrics.firstTimeApprovals,
-                totalSubmissions: metrics.totalSubmissions
-            });
-        }
-
-        console.log("update payload:", payload);
+        const payload = Object.entries(formInputs).map(([id, metrics]) => ({
+            projectCoordinatorId: Number(id),
+            date: topviews.date,
+            firstTimeApprovals: metrics.firstTimeApprovals,
+            totalSubmissions: metrics.totalSubmissions
+        }));
+        
         try {
             const response = await fetch('/api/topviews', {
                 method: 'POST',
@@ -32,6 +36,13 @@
 
             if (!response.ok) throw new Error("Failed to save");
 
+            for (const entry of payload) {
+                const id = entry.projectCoordinatorId;
+                topviews[id] = {
+                    firstTimeApprovals: entry.firstTimeApprovals,
+                    totalSubmissions: entry.totalSubmissions
+                };
+            }
             editing = false;
         } catch (err) {
             console.error('Error updating topviews.', err);
@@ -47,16 +58,14 @@
         {#key coordinator.id}
             <TableBodyCell class="text-gray-400">
                 {#if editing}
-                    <Input 
-                        id="firstTimeApprovals" 
-                        value={topviews[coordinator.id]?.firstTimeApprovals ?? ''}
+                    <Input
+                        bind:value={formInputs[coordinator.id].firstTimeApprovals}
                         placeholder="accepted"
                         size="sm"
                         class="mb-1"
                     />
                     <Input
-                        id="totalSubmissions"
-                        value={topviews[coordinator.id]?.totalSubmissions ?? ''}
+                        bind:value={formInputs[coordinator.id].totalSubmissions}
                         placeholder="total"
                         size="sm"
                         class="mt-1"
