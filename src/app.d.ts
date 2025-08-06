@@ -1,3 +1,5 @@
+import type { JwtPayload } from 'jsonwebtoken';
+
 // See https://svelte.dev/docs/kit/types#app.d.ts
 // for information about these interfaces
 declare global {
@@ -10,6 +12,9 @@ declare global {
                 waitUntil(promise: Promise<any>): void;
             };
             caches: CacheStorage & { default: Cache }
+        }
+        interface Locals {
+            user?: JwtPayload;
         }
     }
 }

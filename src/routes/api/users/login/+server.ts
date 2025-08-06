@@ -1,19 +1,9 @@
+import { json } from '@sveltejs/kit';
 import { type RequestHandler } from '@sveltejs/kit';
-import { verifyPassword } from '$lib/auth';
+import { verifyPassword, generateToken } from '$lib/auth';
 
 export const POST: RequestHandler = async ({ request, platform, cookies }) => {
-  const raw = await request.json();
-
-  if (
-    typeof raw !== 'object' ||
-    raw === null ||
-    typeof (raw as any).username !== 'string' ||
-    typeof (raw as any).password !== 'string'
-  ) {
-    return new Response('Invalid request format', { status: 400 });
-  }
-
-  const { username, password } = raw as { username: string; password: string };
+  const { username, password } = await request.json() as { username: string; password: string };
 
   const result = await platform?.env.DB
     .prepare('SELECT * FROM users WHERE username = ?')
@@ -21,29 +11,23 @@ export const POST: RequestHandler = async ({ request, platform, cookies }) => {
     .run();
 
   const user = result?.results?.[0];
-
-  if (
-    !user ||
-    typeof user !== 'object' ||
-    user === null ||
-    typeof user.password !== 'string' ||
-    typeof user.id !== 'number'
-  ) {
-    return new Response('User not found', { status: 404 });
+  if (!user || typeof user.password !== 'string' || typeof user.id !== 'number') {
+    return json({ error: 'User not found' }, { status: 404 });
   }
 
   const valid = await verifyPassword(password, user.password);
-
   if (!valid) {
-    return new Response('Invalid credentials', { status: 401 });
+    return json({ error: 'Invalid credentials' }, { status: 401 });
   }
+  const token = generateToken({ id: user.id, username: user.username });
 
-  cookies.set('session_id', String(user.id), {
+  cookies.set('auth_token', token, {
     path: '/',
     httpOnly: true,
-    secure: true,
+    sameSite: 'strict',
+    secure: true, //set to false for dev
     maxAge: 60 * 60 * 24
   });
 
-  return new Response('Logged in', { status: 200 });
+  return json({ success: true });
 };
