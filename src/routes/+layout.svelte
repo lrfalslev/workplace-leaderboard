@@ -1,11 +1,10 @@
 <script lang="ts">
 	import "../app.css";
 	import { Button, Modal, Input } from "flowbite-svelte";
-	import { goto, invalidate } from "$app/navigation";
+	import { goto } from "$app/navigation";
+	import { userStore, type User } from '$lib/auth';
 
-	let { data, children } = $props();
-	const user = $derived(() => data.user);
-
+	const user = $derived(() => $userStore);
 	let loginModal = $state(false);
 	let username = "";
 	let password = "";
@@ -18,9 +17,8 @@
 		});
 
 		if (res.ok) {
-			loginModal = false;
-			await invalidate(window.location.pathname);
-			goto("/admin");
+			const userData = await res.json() as User;
+			userStore.set(userData);
 		} else {
 			console.error(await res.text());
 		}
@@ -33,8 +31,7 @@
 		});
 
 		if (res.ok) {
-			console.info('Logged out.')
-			await invalidate(window.location.pathname);
+			userStore.set(null);
 			goto('/');
 		} else {
 			console.error(await res.text());
@@ -54,6 +51,8 @@
 			console.warn("Not authenticated:", await res.text());
 		}
 	}
+
+	let { children } = $props();
 </script>
 
 <div class="min-h-screen w-full flex flex-col bg-gray-700">
@@ -66,7 +65,7 @@
 		</nav>
 	{:else}
 		<div class="absolute top-0 right-0 p-2">
-			<Button class="text-sm cursor-pointer py-1 m-0 mt-1 mr-1" color="alternative" onclick={handleLogin}>Login</Button>
+			<Button class="text-sm cursor-pointer py-1 m-0 mt-1 mr-1" color="alternative" onclick={() => loginModal = true}>Login</Button>
 		</div>
 	{/if}
 	<Button class="text-sm cursor-pointer py-1 m-0 mt-1 mr-1" color="alternative" onclick={checkAuth}>

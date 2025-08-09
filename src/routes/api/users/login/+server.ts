@@ -1,6 +1,7 @@
 import { json } from '@sveltejs/kit';
 import { type RequestHandler } from '@sveltejs/kit';
-import { verifyPassword, generateToken } from '$lib/auth';
+import { verifyPassword, generateToken } from '$lib/auth.server';
+import type { User } from '$lib/auth';
 
 export const POST: RequestHandler = async ({ request, platform, cookies }) => {
   const { username, password } = await request.json() as { username: string; password: string };
@@ -29,5 +30,5 @@ export const POST: RequestHandler = async ({ request, platform, cookies }) => {
     maxAge: 60 * 60 * 24
   });
 
-  return json({ success: true });
+  return json({ id: user.id, username: user.username });
 };
