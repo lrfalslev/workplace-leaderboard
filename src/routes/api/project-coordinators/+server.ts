@@ -5,7 +5,11 @@ export const GET: RequestHandler = async function ({ platform }) {
     return json(queryResult?.results);
 };
 
-export const POST: RequestHandler = async function ({ request, platform }) {
+export const POST: RequestHandler = async function ({ locals, request, platform }) {
+    if (!locals.user) {
+        return json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    
     const { name } = await request.json() as { name: string };
 
     try {
@@ -20,7 +24,11 @@ export const POST: RequestHandler = async function ({ request, platform }) {
     }
 };
 
-export const PUT: RequestHandler = async function ({ request, platform }) {
+export const PUT: RequestHandler = async function ({ locals, request, platform }) {
+    if (!locals.user) {
+        return json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { id, name } = await request.json() as { id: number, name: string };
 
     try {
@@ -35,7 +43,11 @@ export const PUT: RequestHandler = async function ({ request, platform }) {
     }
 };
 
-export const DELETE: RequestHandler = async function ({ url, platform }) {
+export const DELETE: RequestHandler = async function ({ locals, url, platform }) {
+    if (!locals.user) {
+        return json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const id = Number(url.searchParams.get('id'));
 
     if (!id || typeof id !== 'number') {

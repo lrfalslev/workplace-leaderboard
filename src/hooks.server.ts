@@ -1,22 +1,14 @@
 import type { Handle } from '@sveltejs/kit';
-import { verifyToken } from '$lib/auth.server';
+import { verifyToken } from '$lib/auth';
 import { redirect } from '@sveltejs/kit';
 
 export const handle: Handle = async ({ event, resolve }) => {
     const token = event.cookies.get('auth_token');
 
     if (token) {
-        const payload = verifyToken(token);
-        if (payload?.id) {
-            const result = await event.platform?.env.DB
-                .prepare('SELECT id, username FROM users WHERE id = ?')
-                .bind(payload.id)
-                .run();
-
-            const user = result?.results?.[0];
-            if (user) {
-                event.locals.user = user;
-            }
+        const user = verifyToken(token);
+        if (user !== null) {
+            event.locals.user = user;
         }
     }
 

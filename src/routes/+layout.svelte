@@ -1,10 +1,10 @@
 <script lang="ts">
 	import "../app.css";
 	import { Button, Modal, Input } from "flowbite-svelte";
-	import { goto } from "$app/navigation";
-	import { userStore, type User } from '$lib/auth';
-
-	const user = $derived(() => $userStore);
+	import { goto, invalidate } from "$app/navigation";
+	import { page } from '$app/state';
+	
+	const user = $derived(() => page.data.user);
 	let loginModal = $state(false);
 	let username = "";
 	let password = "";
@@ -17,8 +17,8 @@
 		});
 
 		if (res.ok) {
-			const userData = await res.json() as User;
-			userStore.set(userData);
+			await invalidate('app:auth');
+        	loginModal = false;
 		} else {
 			console.error(await res.text());
 		}
@@ -26,12 +26,11 @@
 
 	async function handleLogout() {
 		const res = await fetch("/api/users/logout", {
-			method: "POST",
-			credentials: "include",
+			method: "POST"
 		});
 
-		if (res.ok) {
-			userStore.set(null);
+		if (res.ok) {        
+			await invalidate('app:auth');
 			goto('/');
 		} else {
 			console.error(await res.text());
@@ -40,8 +39,7 @@
 
 	async function checkAuth() {
 		const res = await fetch("/api/users/me", {
-			method: "GET",
-			credentials: "include",
+			method: "GET"
 		});
 
 		if (res.ok) {
@@ -52,12 +50,12 @@
 		}
 	}
 
-	let { children } = $props();
+    const { children } = $props();
 </script>
 
 <div class="min-h-screen w-full flex flex-col bg-gray-700">
 	{#if user()}
-		<nav class="w-full text-white mb-2 flex justify-end items-center">
+		<nav class="w-full text-white flex justify-end items-center">
 			<Button class="text-sm cursor-pointer py-1 m-0 mt-1" color="alternative" onclick={() => goto('/')}>Leaderboard</Button>
 			<Button class="text-sm cursor-pointer py-1 m-0 mt-1" color="alternative" onclick={() => goto('/admin')}>Admin</Button>
 			<Button class="text-sm cursor-pointer py-1 m-0 mt-1" color="alternative" onclick={() => goto('/lottery')}>Lottery</Button>
@@ -68,9 +66,9 @@
 			<Button class="text-sm cursor-pointer py-1 m-0 mt-1 mr-1" color="alternative" onclick={() => loginModal = true}>Login</Button>
 		</div>
 	{/if}
-	<Button class="text-sm cursor-pointer py-1 m-0 mt-1 mr-1" color="alternative" onclick={checkAuth}>
+	<!-- <Button class="text-sm cursor-pointer py-1 m-0 mt-1 mr-1" color="alternative" onclick={checkAuth}>
     	Check Auth
-	</Button>
+	</Button> -->
 	<main class="flex-grow overflow-hidden flex items-center justify-center">
 		{@render children()}
 	</main>

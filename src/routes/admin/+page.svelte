@@ -3,7 +3,7 @@
     import { Table, TableBody, TableHead, TableHeadCell, Button, Input, Modal, Popover } from "flowbite-svelte";
     import {  EditSolid, TrashBinSolid } from "flowbite-svelte-icons";
     import EditableRow from "./components/EditableRow.svelte";
-    import type { Topview, Coordinator } from './types/topview';
+    import type { Topview, Coordinator } from '$lib/types';
     
     let name = $state('');
     let date = new Date().toLocaleDateString('en-CA');

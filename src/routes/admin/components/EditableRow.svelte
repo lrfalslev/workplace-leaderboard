@@ -1,7 +1,7 @@
 <script lang="ts">
     import { TableBodyRow, TableBodyCell, Input, Button } from "flowbite-svelte";
     import {  EditSolid } from "flowbite-svelte-icons";
-    import type { Coordinator } from '../types/topview';
+    import type { Coordinator } from '$lib/types';
 
     export let coordinators: Coordinator[];
     export let topviews: Record<string | number, any>;    

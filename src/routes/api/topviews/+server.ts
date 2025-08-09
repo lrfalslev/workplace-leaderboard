@@ -14,7 +14,11 @@ export const GET: RequestHandler = async function ({ platform }) {
     return json(queryResult?.results);
 };
 
-export const POST: RequestHandler = async function ({ request, platform }) {
+export const POST: RequestHandler = async function ({ locals, request, platform }) {
+    if (!locals.user) {
+        return json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const topviews = await request.json() as {
         projectCoordinatorId: number;
         date: string;

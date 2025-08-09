@@ -1,4 +1,4 @@
-import type { JwtPayload } from 'jsonwebtoken';
+import type { User } from '$lib/types';
 
 // See https://svelte.dev/docs/kit/types#app.d.ts
 // for information about these interfaces
@@ -14,7 +14,7 @@ declare global {
             caches: CacheStorage & { default: Cache }
         }
         interface Locals {
-            user?: JwtPayload;
+            user?: User;
         }
     }
 }
