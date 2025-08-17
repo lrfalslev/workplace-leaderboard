@@ -11,8 +11,6 @@ export type User = {
     role: UserRole
 };
 
-export const userStore = writable<User | null>(null);
-
 export interface Topview {
     date: string;
     coordinatorId: number;

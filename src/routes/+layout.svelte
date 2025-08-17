@@ -4,8 +4,8 @@
 	import { goto, invalidate } from "$app/navigation";
 	import { page } from '$app/state';
     import { UserRole, type User } from "$lib/types";
+	import { user } from '$lib/stores/user';
 	
-	const user = $derived(() => page.data.user as User | null);
 	let loginModal = $state(false);
 	let signUpModal = $state(false);
 	let username = "";
@@ -71,7 +71,7 @@
 </script>
 
 <div class="min-h-screen w-full flex flex-col bg-gray-700">
-	{#if user() && user()?.role == UserRole.Admin}
+	{#if $user && $user.role == UserRole.Admin}
 		<nav class="w-full text-white flex justify-end items-center">
 			<Button class="text-sm cursor-pointer py-1 m-0 mt-1" color="alternative" onclick={() => goto('/')}>Leaderboard</Button>
 			<Button class="text-sm cursor-pointer py-1 m-0 mt-1" color="alternative" onclick={() => goto('/admin')}>Admin</Button>
@@ -79,9 +79,9 @@
 			<Button class="text-sm cursor-pointer py-1 m-0 mt-1" color="alternative" onclick={() => goto('/lottery')}>Lottery</Button>
 			<Button class="text-sm cursor-pointer py-1 m-0 mt-1 mr-1" color="alternative" onclick={handleLogout}>Logout</Button>
 		</nav>
-	{:else if user()}
+	{:else if $user}
 		<nav class="w-full text-white flex justify-end items-center">
-			<span>Hello, {user()?.username}, you have no role, contact admin to get a role assigned.</span>
+			<span>Hello, {$user.username}, you have no role, contact admin to get a role assigned.</span>
 			<Button class="text-sm cursor-pointer py-1 m-0 mt-1 mx-1" color="alternative" onclick={handleLogout}>Logout</Button>
 		</nav>
 	{:else}

@@ -62,17 +62,19 @@
                     <Input
                         bind:value={formInputs[coordinator.id].firstTimeApprovals}
                         placeholder="accepted"
+                        title="First Sumbission Accepted" 
                         size="sm"
                         class="mb-1"
                     />
                     <Input
                         bind:value={formInputs[coordinator.id].totalSubmissions}
                         placeholder="total"
+                        title="Total Topviews Submitted" 
                         size="sm"
                         class="mt-1"
                     />
                 {:else}
-                    {#if topviews[coordinator.id]}
+                    {#if topviews[coordinator.id] && topviews[coordinator.id].totalSubmissions != 0}
                         {topviews[coordinator.id].firstTimeApprovals}/{topviews[coordinator.id].totalSubmissions}
                     {:else}
                         —

@@ -17,7 +17,7 @@
             const response = await fetch('/api/users');
             const data = await response.json();
             if (response.ok && Array.isArray(data)) {
-                users = data;
+                users = data.sort((a, b) => a.username.localeCompare(b.username));
             } else {
                 console.error('Unexpected response format:', data);
             }
@@ -131,7 +131,10 @@
 </Modal>
 
 <Modal bind:open={deleteModal} size="xs" class="pt-8 text-center">
-    <h3 class="text-lg font-semibold mb-4">Delete {selectedUser?.username}</h3>
+    <p>
+        Delete <strong>{selectedUser?.username}</strong>?<br />
+        <span class="text-red-400">This action cannot be undone.</span>
+    </p>
     <div class="flex justify-center gap-2">
         <Button onclick={() => selectedUser && deleteUser(selectedUser.id)}>Delete</Button>
         <Button color="alternative" onclick={() => (deleteModal = false)}>Cancel</Button>

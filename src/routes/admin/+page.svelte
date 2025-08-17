@@ -22,7 +22,7 @@
             const data = await response.json();
 
             if (response.ok && Array.isArray(data)) {
-                coordinators = data;
+                coordinators = data.sort((a, b) => a.name.localeCompare(b.name));
             } else {
                 console.error('Unexpected response format:', data);
             }
