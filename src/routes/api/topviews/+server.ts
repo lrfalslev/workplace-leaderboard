@@ -1,3 +1,4 @@
+import { UserRole } from '$lib/types';
 import { json, type RequestHandler } from '@sveltejs/kit';
 
 export const GET: RequestHandler = async function ({ platform }) {
@@ -5,17 +6,20 @@ export const GET: RequestHandler = async function ({ platform }) {
         .prepare(`
             SELECT 
                 topviews.date,
-                projectCoordinators.name AS coordinator,
+                projectCoordinatorId AS coordinatorId,
                 topviews.firstTimeApprovals,
                 topviews.totalSubmissions
             FROM topviews
-            JOIN projectCoordinators ON topviews.projectCoordinatorId = projectCoordinators.id
         `)
         .all();
     return json(queryResult?.results);
 };
 
-export const POST: RequestHandler = async function ({ request, platform }) {
+export const POST: RequestHandler = async function ({ locals, request, platform }) {
+    if (!locals.user || locals.user.role !== UserRole.Admin) {
+        return json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const topviews = await request.json() as {
         projectCoordinatorId: number;
         date: string;

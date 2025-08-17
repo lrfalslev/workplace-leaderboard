@@ -1,70 +1,76 @@
 <script lang="ts">
     import { onMount } from 'svelte';
+    import type { ApexOptions } from 'apexcharts';
+    import { Chart } from '@flowbite-svelte-plugins/chart';
+    import { Card } from 'flowbite-svelte';
+
+    let options: ApexOptions = {
+        chart: {
+            type: 'bar',
+            width: '100%',
+            height: undefined,
+            toolbar: { show: false }
+        },
+        plotOptions: {
+            bar: {
+                horizontal: true,
+            }
+        },
+        dataLabels: { enabled: false },
+        xaxis: {
+            labels: {
+                style: {
+                    cssClass: 'dark:fill-gray-400'
+                }
+            }
+        },
+        yaxis: {
+            labels: {
+                style: {
+                    cssClass: 'dark:fill-gray-400'
+                }
+            }
+        }
+    };
 
     interface SummaryRow {
         coordinator: string;
         totalFirstTimeApprovals: number;
-        totalSubmissions: number;
     }
 
     let summary: SummaryRow[] = [];
 
     onMount(async () => {
+        const isMobile = window.innerWidth < 640;
+        options.dataLabels!.enabled = isMobile;
         try {
             const response = await fetch('/api/topviews/summary');
-            const data = await response.json();
+            const json = await response.json();
 
-            if (response.ok && Array.isArray(data)) {
-                summary = data.sort(
-                    (a, b) => b.totalFirstTimeApprovals - a.totalFirstTimeApprovals
-                );
-            } else {
-                console.error('Unexpected summary format:', data);
+            if (response.ok && Array.isArray(json)) {
+                summary = json.sort((a, b) => b.totalFirstTimeApprovals - a.totalFirstTimeApprovals);
+
+                options.xaxis!.categories = summary.map(row => row.coordinator);
+                options.series = [
+                    {
+                        name: 'Approvals',
+                        data: summary.map(row => row.totalFirstTimeApprovals)
+                    },
+                ];
             }
-        } catch (err) {
-            console.error('Failed to fetch summary:', err);
+        } catch (error) {
+            console.error('Failed to fetch summary:', error);
         }
     });
 </script>
 
-<style>
-    .bar-container {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-        width: 100%;
-        max-width: 500px;
-    }
-
-    .bar-row {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-    }
-
-    .bar-label {
-        width: 150px;
-        font-weight: bold;
-    }
-
-    .bar-fill {
-        height: 24px;
-        background-color: #0d6efd;
-        border-radius: 4px;
-    }
-</style>
-
-<h2>📊 Coordinator Contributions</h2>
-<div class="bar-container">
-    {#each summary as row}
-        <div class="bar-row">
-            <span class="bar-label">{row.coordinator}</span>
-            <div
-                class="bar-fill"
-                style="width: {row.totalFirstTimeApprovals * 20}px"
-                title="{row.totalFirstTimeApprovals} accepted"
-            ></div>
-            <span>{row.totalFirstTimeApprovals}</span>
-        </div>
-    {/each}
-</div>
+<Card class="p-2 md:pr-8 m-12 lg:m-0 w-full md:max-w-screen-lg">
+    <h2 class="text-xl font-semibold dark:text-white flex mt-4 justify-center">
+        First Topviews Accepted
+    </h2>
+    {#if options.series?.length}
+        <Chart {options} />
+    {:else}
+        <p class="pt-4 dark:text-gray-400 flex justify-center">Loading chart data…</p>
+    {/if}
+</Card>
