@@ -1,3 +1,4 @@
+import { UserRole } from '$lib/types';
 import { json, type RequestHandler } from '@sveltejs/kit';
 
 export const GET: RequestHandler = async function ({ platform }) {
@@ -15,7 +16,7 @@ export const GET: RequestHandler = async function ({ platform }) {
 };
 
 export const POST: RequestHandler = async function ({ locals, request, platform }) {
-    if (!locals.user) {
+    if (!locals.user || locals.user.role !== UserRole.Admin) {
         return json({ error: 'Unauthorized' }, { status: 401 });
     }
 

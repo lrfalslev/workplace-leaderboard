@@ -1,8 +1,14 @@
 import { writable } from 'svelte/store';
 
+export enum UserRole {
+    User = 'user',
+    Admin = 'admin',
+}
+
 export type User = {
     id: number;
     username: string;
+    role: UserRole
 };
 
 export const userStore = writable<User | null>(null);

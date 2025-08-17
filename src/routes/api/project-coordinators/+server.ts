@@ -1,3 +1,4 @@
+import { UserRole } from '$lib/types';
 import { json, type RequestHandler } from '@sveltejs/kit';
 
 export const GET: RequestHandler = async function ({ platform }) {
@@ -6,7 +7,7 @@ export const GET: RequestHandler = async function ({ platform }) {
 };
 
 export const POST: RequestHandler = async function ({ locals, request, platform }) {
-    if (!locals.user) {
+    if (!locals.user || locals.user.role !== UserRole.Admin) {
         return json({ error: 'Unauthorized' }, { status: 401 });
     }
     
@@ -25,7 +26,7 @@ export const POST: RequestHandler = async function ({ locals, request, platform 
 };
 
 export const PUT: RequestHandler = async function ({ locals, request, platform }) {
-    if (!locals.user) {
+    if (!locals.user || locals.user.role !== UserRole.Admin) {
         return json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -44,7 +45,7 @@ export const PUT: RequestHandler = async function ({ locals, request, platform }
 };
 
 export const DELETE: RequestHandler = async function ({ locals, url, platform }) {
-    if (!locals.user) {
+    if (!locals.user || locals.user.role !== UserRole.Admin) {
         return json({ error: 'Unauthorized' }, { status: 401 });
     }
 

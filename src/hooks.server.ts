@@ -12,9 +12,10 @@ export const handle: Handle = async ({ event, resolve }) => {
         }
     }
 
-    const adminRoutes = ['/admin', '/lottery'];
+    const adminRoutes = ['/admin', '/admin/users', '/lottery'];
 
-    if (!event.locals.user && adminRoutes.includes(event.url.pathname)) {
+    const user = event.locals.user;
+    if (adminRoutes.includes(event.url.pathname) && (!user || user.role !== 'admin')) {
         throw redirect(303, '/');
     }
 
