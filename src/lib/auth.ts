@@ -12,17 +12,23 @@ export async function verifyPassword(password: string, hashed: string): Promise<
     return await bcrypt.compare(password, hashed);
 }
 
-const SECRET = 'your-super-secure-secret'; // Use env var in production
+const SECRET = process.env.JWT_SECRET as string;
 
 export function generateToken(payload: User): string {
+    if (!SECRET) throw new Error('JWT_SECRET not set');
     return jwt.sign(payload, SECRET, { expiresIn: '1d' });
 }
 
-export function verifyToken(token: string): User | null {
+export async function verifyToken(token: string, env: App.Platform['env']): Promise<User | null> {
     try {
         const decoded = jwt.verify(token, SECRET);
         if (typeof decoded === 'object' && decoded !== null) {
-            return decoded as User;
+            const { id } = decoded as { id: string };
+            const user = await env.DB
+                .prepare('SELECT id, username, role FROM users WHERE id = ?')
+                .bind(id)
+                .first<User>();
+            return user ?? null;
         }
     } catch (err) {
         console.warn('Token verification failed:', err);

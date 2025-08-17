@@ -6,7 +6,7 @@ export const handle: Handle = async ({ event, resolve }) => {
     const token = event.cookies.get('auth_token');
 
     if (token) {
-        const user = verifyToken(token);
+        const user = await verifyToken(token, event.platform!.env);
         if (user !== null) {
             event.locals.user = user;
         }
