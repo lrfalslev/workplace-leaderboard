@@ -4,12 +4,13 @@ export const GET: RequestHandler = async function ({ platform }) {
     const queryResult = await platform?.env.DB
         .prepare(`
             SELECT 
-                projectCoordinators.name AS coordinator,
+                projectCoordinators.id AS coordinatorId,
+                projectCoordinators.name AS coordinatorName,
                 SUM(topviews.firstTimeApprovals) AS totalFirstTimeApprovals,
                 SUM(topviews.totalSubmissions) AS totalSubmissions
             FROM projectCoordinators
             LEFT JOIN topviews ON topviews.projectCoordinatorId = projectCoordinators.id
-            GROUP BY topviews.projectCoordinatorId, coordinator
+            GROUP BY topviews.projectCoordinatorId
         `)
         .all();
 

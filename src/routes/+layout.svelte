@@ -87,7 +87,6 @@
 		</nav>
 	{:else if $user}
 		<nav class="w-full text-white flex justify-end items-center">
-			<span>Hello, {$user.username}, you have no role, contact admin to get a role assigned.</span>
 			<Button class="text-sm py-1 m-0 mt-1 mx-1" color="alternative" onclick={handleLogout}>Logout</Button>
 		</nav>
 	{:else}

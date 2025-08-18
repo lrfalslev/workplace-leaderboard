@@ -7,11 +7,14 @@
     import { UserRole } from '$lib/types';
 
     interface SummaryRow {
-        coordinator: string;
+        coordinatorId: number;
+        coordinatorName: string;
         totalFirstTimeApprovals: number;
         totalSubmissions: number;
     }
     
+    let coordinatorName: string | null = null;
+    let coordinatorAcceptanceRate: string | null = null;
     let summary: SummaryRow[] = [];
     let options: ApexOptions = {
         colors: ['#10B981', '#3B82F6'],
@@ -45,7 +48,19 @@
         }
     };
 
-    function createAdminTooltip(data: SummaryRow[]): ApexOptions['tooltip'] {
+    function createTooltip(data: SummaryRow[], isAdmin: boolean): ApexOptions['tooltip'] {
+        if (!isAdmin) {
+            return {
+                custom: ({ dataPointIndex, w }) => {
+                    const row = data[dataPointIndex];
+                    return `
+                        <div class="p-2 text-sm bg-white dark:bg-gray-800 dark:text-white rounded shadow">
+                            First Time Approvals: ${row.totalFirstTimeApprovals}<br/>
+                        </div>
+                    `;
+                }
+            };
+        }
         return {
             shared: true,
             intersect: false,
@@ -57,7 +72,7 @@
 
                 return `
                     <div class="p-2 text-sm bg-white dark:bg-gray-800 dark:text-white rounded shadow">
-                        <strong>${row.coordinator} (${percentage}%)</strong><br/>
+                        <strong>${row.coordinatorName} (${percentage}%)</strong><br/>
                         First Time Approvals: ${row.totalFirstTimeApprovals}<br/>
                         Total Submissions: ${row.totalSubmissions}
                     </div>
@@ -82,6 +97,19 @@
         return base;
     }
 
+    function getUsersAcceptanceRate() {
+        const coordinatorRow = summary.find(
+            row => row.coordinatorId === $user?.projectCoordinatorId
+        );
+        if (coordinatorRow) {
+            const rate = coordinatorRow.totalSubmissions > 0
+                ? (coordinatorRow.totalFirstTimeApprovals / coordinatorRow.totalSubmissions) * 100
+                : 0;
+            coordinatorAcceptanceRate = rate.toFixed(1);
+            coordinatorName = coordinatorRow.coordinatorName;
+        }
+    }
+
     onMount(async () => {
         const isMobile = window.innerWidth < 640;
         options.dataLabels!.enabled = isMobile;
@@ -94,13 +122,14 @@
                 return;
                 
             summary = json.sort((a, b) => b.totalFirstTimeApprovals - a.totalFirstTimeApprovals);
-            options.xaxis!.categories = summary.map(row => row.coordinator);
+            options.xaxis!.categories = summary.map(row => row.coordinatorName);
+
+            if ($user?.projectCoordinatorId != null)
+                getUsersAcceptanceRate();
 
             const isAdmin = $user?.role === UserRole.Admin;
             options.series = getSeries(isAdmin, summary);
-            if (isAdmin) {
-                options.tooltip = createAdminTooltip(summary);
-            }
+            options.tooltip = createTooltip(summary, isAdmin);
         } catch (error) {
             console.error('Failed to fetch summary:', error);
         }
@@ -111,6 +140,11 @@
     <h2 class="text-xl font-semibold dark:text-white flex mt-4 justify-center">
         First Topviews Accepted
     </h2>
+    {#if coordinatorName != null && coordinatorAcceptanceRate != null}
+        <p class="dark:text-white flex justify-center">
+            {coordinatorName} you have an acceptance rate of: {coordinatorAcceptanceRate}%
+        </p>
+    {/if}
     {#if options.series?.length}
         <Chart {options} />
     {:else}
