@@ -10,7 +10,7 @@ export const GET: RequestHandler = async function ({ platform }) {
                 SUM(topviews.totalSubmissions) AS totalSubmissions
             FROM projectCoordinators
             LEFT JOIN topviews ON topviews.projectCoordinatorId = projectCoordinators.id
-            GROUP BY topviews.projectCoordinatorId
+            GROUP BY projectCoordinators.id, projectCoordinators.name
         `)
         .all();
 
