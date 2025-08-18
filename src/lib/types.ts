@@ -1,5 +1,3 @@
-import { writable } from 'svelte/store';
-
 export enum UserRole {
     User = 'user',
     Admin = 'admin',
@@ -8,7 +6,8 @@ export enum UserRole {
 export type User = {
     id: number;
     username: string;
-    role: UserRole
+    role: UserRole,
+    projectCoordinatorId: number | null
 };
 
 export interface Topview {

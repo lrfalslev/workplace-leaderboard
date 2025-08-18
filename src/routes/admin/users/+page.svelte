@@ -1,14 +1,17 @@
 <script lang="ts">
     import { onMount } from 'svelte';
-    import { Table, TableBody, TableHead, TableHeadCell, TableBodyRow, TableBodyCell, Button, Modal, Select } from 'flowbite-svelte';
+    import { Table, TableBody, TableHead, TableHeadCell, TableBodyRow, TableBodyCell, Button, Modal } from 'flowbite-svelte';
     import { EditSolid, TrashBinSolid } from 'flowbite-svelte-icons';
-    import { UserRole, type User } from '$lib/types';
+    import { UserRole, type Coordinator, type User } from '$lib/types';
+	import { user as currentUser } from '$lib/stores/user';
 
     let users: User[] = $state([]);
+    let coordinators: Coordinator[] = $state([]);
     let editModal = $state(false);
     let deleteModal = $state(false);
-    let selectedUser: User | null = null;
-    let selectedRole: UserRole = UserRole.User;
+    let selectedUser: User | null = $state(null);
+    let selectedRole: UserRole = $state(UserRole.User);
+    let selectedCoordinator: number | null = $state(null);
 
     const roleOptions = Object.values(UserRole);
 
@@ -26,18 +29,22 @@
         }
     }
 
-    async function updateUserRole() {
+    async function updateUser() {
         if (!selectedUser) return;
 
         try {
             const response = await fetch('/api/users', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: selectedUser.id, role: selectedRole })
+                body: JSON.stringify({ 
+                    id: selectedUser.id, 
+                    role: selectedRole, 
+                    coordinator: selectedCoordinator 
+                })
             });
 
             if (!response.ok) {
-                alert('❌ Could not update user role.');
+                alert('❌ Could not update user.');
                 return;
             }
 
@@ -45,13 +52,16 @@
             const index = users.findIndex(u => u.id === selectedUser?.id);
             if (index !== -1) {
                 users[index].role = selectedRole;
+                users[index].projectCoordinatorId = selectedCoordinator ?? null;
             }
 
             editModal = false;
             selectedUser = null;
+            selectedRole = UserRole.User;
+            selectedCoordinator = null;
         } catch (err) {
-            console.error('Error updating user role:', err);
-            alert('❌ Could not update user role.');
+            console.error('Error updating user:', err);
+            alert('❌ Could not update user.');
         }
     }
 
@@ -73,10 +83,26 @@
             alert('❌ Could not delete project user. Please try again.');
         }
     }
+    
+    async function fetchCoordinators() {
+        try {
+            const response = await fetch('/api/project-coordinators');
+            const data = await response.json();
+
+            if (response.ok && Array.isArray(data)) {
+                coordinators = data.sort((a, b) => a.name.localeCompare(b.name));
+            } else {
+                console.error('Unexpected response format:', data);
+            }
+        } catch (err) {
+            console.error('Failed to fetch topviews:', err);
+        }
+    }
 
     function openEditModal(user: User) {
         selectedUser = user;
         selectedRole = user.role;
+        selectedCoordinator = user.projectCoordinatorId;
         editModal = true;
     }
 
@@ -87,45 +113,58 @@
 
     onMount(() => {
         fetchUsers();
+        fetchCoordinators();
     });
 </script>
 
 
 <div class="max-w-4xl mx-auto mt-6">
-    <Table>
-        <TableHead>
-            <TableHeadCell>Username</TableHeadCell>
-            <TableHeadCell>Role</TableHeadCell>
-            <TableHeadCell class="sr-only">Edit</TableHeadCell>
-        </TableHead>
-        <TableBody>
-            {#each users as user}
-                <TableBodyRow>
-                    <TableBodyCell>{user.username}</TableBodyCell>
-                    <TableBodyCell>{user.role}</TableBodyCell>
-                    <TableBodyCell>
-                        <Button size="xs" onclick={() => openEditModal(user)}>
-                            <EditSolid class="w-4 h-4" />
-                        </Button>
-                        <Button size="xs" onclick={() => openDeleteModal(user)}>
-                            <TrashBinSolid class="w-4 h-4" />
-                        </Button>
-                    </TableBodyCell>
-                </TableBodyRow>
-            {/each}
-        </TableBody>
-    </Table>
+    <div class="overflow-y-auto w-[95vw] max-w-full">
+        <Table class="text-center min-w-max">
+            <TableHead>
+                <TableHeadCell>Username</TableHeadCell>
+                <TableHeadCell>Role</TableHeadCell>
+                <TableHeadCell>Coordinator</TableHeadCell>
+                <TableHeadCell>Edit</TableHeadCell>
+            </TableHead>
+            <TableBody>
+                {#each users as user}
+                    <TableBodyRow>
+                        <TableBodyCell>{user.username}</TableBodyCell>
+                        <TableBodyCell>{user.role}</TableBodyCell>
+                        <TableBodyCell>{coordinators.find(c => c.id === user.projectCoordinatorId)?.name ?? '-'}</TableBodyCell>
+                        <TableBodyCell>
+                            <Button disabled={user.id === $currentUser?.id} size="xs" onclick={() => openEditModal(user)}>
+                                <EditSolid class="w-4 h-4" />
+                            </Button>
+                            <Button disabled={user.id === $currentUser?.id} size="xs" onclick={() => openDeleteModal(user)}>
+                                <TrashBinSolid class="w-4 h-4" />
+                            </Button>
+                        </TableBodyCell>
+                    </TableBodyRow>
+                {/each}
+            </TableBody>
+        </Table>
+    </div>
 </div>
 
 <Modal bind:open={editModal} size="xs" class="pt-8 text-center">
-    <h3 class="text-lg font-semibold mb-4">Edit Role for {selectedUser?.username}</h3>
-    <Select bind:value={selectedRole} class="mb-4">
+    <h3 class="text-lg font-semibold mb-4">Update <strong>{selectedUser?.username}</strong></h3>
+    <select bind:value={selectedRole} class="custom-select">
+        <option value="" disabled selected>Assigned Role</option>
         {#each roleOptions as role}
             <option value={role}>{role}</option>
         {/each}
-    </Select>
+    </select>    
+    <select bind:value={selectedCoordinator} class="custom-select">
+        <option value="" disabled selected>Linked coordinator</option>
+
+        {#each coordinators as coordinator}
+            <option value={coordinator.id}>{coordinator.name}</option>
+        {/each}
+    </select>
     <div class="flex justify-center gap-2">
-        <Button onclick={updateUserRole}>Update</Button>
+        <Button onclick={updateUser}>Update</Button>
         <Button color="alternative" onclick={() => (editModal = false)}>Cancel</Button>
     </div>
 </Modal>
@@ -140,3 +179,41 @@
         <Button color="alternative" onclick={() => (deleteModal = false)}>Cancel</Button>
     </div>
 </Modal>
+
+<style>
+  .custom-select {
+    display: block;
+    width: 100%;
+    color: #111827; /* gray-900 */
+    background-color: #f9fafb; /* gray-50 */
+    border: 1px solid #d1d5db; /* gray-300 */
+    border-radius: 0.5rem; /* rounded-lg */
+    font-size: 0.875rem; /* text-sm */
+    padding: 0.625rem 0.625rem; /* px-2.5 py-2.5 */
+    outline: none;
+  }
+
+  .custom-select:focus {
+    --ring-color: #3b82f6; /* primary-500 */
+    box-shadow: 0 0 0 2px var(--ring-color);
+    border-color: var(--ring-color);
+  }
+
+  /* Dark mode styles */
+  @media (prefers-color-scheme: dark) {
+    .custom-select {
+      background-color: #374151; /* gray-700 */
+      border-color: #4b5563; /* gray-600 */
+      color: #fff; /* white */
+    }
+    .custom-select:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 2px #3b82f6;
+    }
+  }
+
+  /* Placeholder style */
+  .custom-select option[disabled] {
+    color: #9ca3af; /* gray-400 */
+  }
+</style>

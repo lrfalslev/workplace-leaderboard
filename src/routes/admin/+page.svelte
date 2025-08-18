@@ -153,11 +153,11 @@
     <div class="flex items-center sticky top-0 z-30 mb-2 bg-gray-700">
         <div class="flex gap-2 w-1/2 m-2">
             <Input bind:value={name} type="text" placeholder="coordinator name" class="flex-1" onkeydown={(e) => e.key === 'Enter' && addCoordinator()}/>
-            <Button class="cursor-pointer" onclick={addCoordinator}>Add PC</Button>
+            <Button onclick={addCoordinator}>Add PC</Button>
         </div>
         <div class="flex gap-2 w-1/2 m-2">
             <Input bind:value={date} type="date" class="flex-1" onkeydown={(e) => e.key === 'Enter' && addNewRow()}/>
-            <Button class="cursor-pointer" onclick={addNewRow}>Add Date</Button>
+            <Button onclick={addNewRow}>Add Date</Button>
         </div>
     </div>
     <Table class="text-center w-full">
@@ -169,14 +169,14 @@
                         {coordinator.name}
                         <Popover>
                             <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button class="cursor-pointer" onclick={() => {
+                                <button onclick={() => {
                                     selectedCoordinator = coordinator;
                                     updatedName = coordinator.name;
                                     editModal = true;
                                 }}>
                                     <EditSolid class="dark:text-gray-400 dark:hover:text-white" />
                                 </button>
-                                <button class="cursor-pointer" onclick={() => {
+                                <button onclick={() => {
                                     selectedCoordinator = coordinator;
                                     deleteModal = true;
                                 }}>

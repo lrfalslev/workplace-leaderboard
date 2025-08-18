@@ -7,7 +7,7 @@ export const GET: RequestHandler = async function ({ locals, platform }) {
         return json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const queryResult = await platform?.env.DB.prepare('SELECT id, username, role FROM users').all();
+    const queryResult = await platform?.env.DB.prepare('SELECT id, username, role, projectCoordinatorId FROM users').all();
     return json(queryResult?.results);
 };
 
@@ -36,16 +36,21 @@ export const PUT: RequestHandler = async function ({ locals, request, platform }
         return json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id, role } = await request.json() as { id: number, role: string };
+    const { id, role, coordinator } = await request.json() as { 
+        id: number, 
+        role: string, 
+        coordinator: number | null 
+    };
 
     try {
-        await platform?.env.DB.prepare('UPDATE users SET role = ? WHERE id = ?')
-            .bind(role, id)
+        await platform?.env.DB
+            .prepare('UPDATE users SET role = ?, projectCoordinatorId = ? WHERE id = ?')
+            .bind(role, coordinator, id)
             .run();
 
         return json({ success: true });
     } catch (err) {
-        console.error('Failed to update user role:', err);
+        console.error('Failed to update user:', err);
         return new Response('Internal Error', { status: 500 });
     }
 };
