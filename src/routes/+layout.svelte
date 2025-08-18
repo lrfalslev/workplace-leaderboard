@@ -79,11 +79,14 @@
 		</div>
 	{/if}
 	{#if $user && $user.role == UserRole.Admin}
-		<nav class="w-full text-white flex justify-end items-center">
-			<Button class="text-sm py-1 m-0 mt-1" color="alternative" onclick={() => goto('/')}>Leaderboard</Button>
-			<Button class="text-sm py-1 m-0 mt-1" color="alternative" onclick={() => goto('/admin')}>Admin</Button>
-			<Button class="text-sm py-1 m-0 mt-1" color="alternative" onclick={() => goto('/admin/users')}>Users</Button>
-			<Button class="text-sm py-1 m-0 mt-1 mr-1" color="alternative" onclick={handleLogout}>Logout</Button>
+		<nav class="w-full text-white flex items-center justify-center sm:justify-end text-xs sm:text-sm">
+			<Button href="/" class="py-1 m-0 mt-1" color="alternative">
+				<span class="hidden sm:inline">Leaderboard</span>
+				<span class="inline sm:hidden">Home</span>
+			</Button>
+			<Button href="/admin" class="py-1 m-0 mt-1" color="alternative">Admin</Button>
+			<Button href="/admin/users" class="py-1 m-0 mt-1" color="alternative">Users</Button>
+			<Button class="py-1 m-0 mt-1 mr-1" color="alternative" onclick={handleLogout}>Logout</Button>
 		</nav>
 	{:else if $user}
 		<nav class="w-full text-white flex justify-end items-center">

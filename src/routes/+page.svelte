@@ -21,9 +21,17 @@
         chart: {
             type: 'bar',
             width: '100%',
-            height: undefined,
+            height: '100%',
             toolbar: { show: false }
         },
+        responsive: [{
+            breakpoint: 480,
+            options: {
+                dataLabels: {
+                    enabled: true
+                }
+            }
+        }],
         plotOptions: {
             bar: {
                 horizontal: true,
@@ -111,9 +119,6 @@
     }
 
     onMount(async () => {
-        const isMobile = window.innerWidth < 640;
-        options.dataLabels!.enabled = isMobile;
-
         try {
             const response = await fetch('/api/topviews/summary');
             const json = await response.json();
@@ -136,17 +141,20 @@
     });
 </script>
 
-<Card class="p-2 md:pr-8 m-12 lg:m-0 w-full md:max-w-screen-lg">
-    <h2 class="text-xl font-semibold dark:text-white flex mt-4 justify-center">
+<Card class="p-2 m-2 md:m-12 lg:m-0 h-[80vh] md:h-[90vh] w-full md:max-w-screen-lg">
+    <h2 class="text-xl font-semibold dark:text-white flex my-2 justify-center">
         First Topviews Accepted
     </h2>
     {#if coordinatorName != null && coordinatorAcceptanceRate != null}
-        <p class="dark:text-white flex justify-center">
-            {coordinatorName} you have an acceptance rate of: {coordinatorAcceptanceRate}%
+        <p class="dark:text-white justify-center text-center text-xs md:text-base sm:flex sm:flex-row">
+            <span class="block sm:inline">Nice work, {coordinatorName}!</span>
+            <span class="block sm:inline ml-1">You're at a {coordinatorAcceptanceRate}% acceptance rate and climbing!</span>
         </p>
     {/if}
     {#if options.series?.length}
-        <Chart {options} />
+        <div class="h-full w-full">
+            <Chart {options} />
+        </div>
     {:else}
         <p class="pt-4 dark:text-gray-400 flex justify-center">Loading chart data…</p>
     {/if}
