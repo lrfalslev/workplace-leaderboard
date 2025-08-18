@@ -117,35 +117,36 @@
     });
 </script>
 
-
-<div class="max-w-4xl mx-auto mt-6">
-    <div class="overflow-y-auto w-[95vw] max-w-full">
-        <Table class="text-center min-w-max">
-            <TableHead>
-                <TableHeadCell>Username</TableHeadCell>
-                <TableHeadCell>Role</TableHeadCell>
-                <TableHeadCell>Coordinator</TableHeadCell>
-                <TableHeadCell>Edit</TableHeadCell>
-            </TableHead>
-            <TableBody>
-                {#each users as user}
-                    <TableBodyRow>
-                        <TableBodyCell>{user.username}</TableBodyCell>
-                        <TableBodyCell>{user.role}</TableBodyCell>
-                        <TableBodyCell>{coordinators.find(c => c.id === user.projectCoordinatorId)?.name ?? '-'}</TableBodyCell>
-                        <TableBodyCell>
-                            <Button disabled={user.id === $currentUser?.id} size="xs" onclick={() => openEditModal(user)}>
-                                <EditSolid class="w-4 h-4" />
-                            </Button>
-                            <Button disabled={user.id === $currentUser?.id} size="xs" onclick={() => openDeleteModal(user)}>
-                                <TrashBinSolid class="w-4 h-4" />
-                            </Button>
-                        </TableBodyCell>
-                    </TableBodyRow>
-                {/each}
-            </TableBody>
-        </Table>
-    </div>
+<div class="max-h-[80vh] overflow-y-auto">
+  <table class="w-full text-center text-xs md:text-base dark:text-gray-400 min-w-max">
+    <thead class="text-xs uppercase">
+      <tr>
+        <th class="px-6 py-3">Username</th>
+        <th class="px-6 py-3">Role</th>
+        <th class="px-6 py-3">Coordinator</th>
+        <th class="px-6 py-3">Edit</th>
+      </tr>
+    </thead>
+    <tbody>
+      {#each users as user}
+        <tr class="bg-white dark:bg-gray-800 dark:border-gray-700 border-b last:border-b-0">
+          <td>{user.username}</td>
+          <td>{user.role}</td>
+          <td>{coordinators.find(c => c.id === user.projectCoordinatorId)?.name ?? '-'}</td>
+          <td>
+            <div class="inline-flex justify-center gap-2">
+                <Button disabled={user.id === $currentUser?.id} size="xs" onclick={() => openEditModal(user)}>
+                    <EditSolid class="w-4 h-4" />
+                </Button>
+                <Button disabled={user.id === $currentUser?.id} size="xs" onclick={() => openDeleteModal(user)}>
+                    <TrashBinSolid class="w-4 h-4" />
+                </Button>
+            </div>
+          </td>
+        </tr>
+      {/each}
+    </tbody>
+  </table>
 </div>
 
 <Modal bind:open={editModal} size="xs" class="pt-8 text-center">
@@ -181,6 +182,20 @@
 </Modal>
 
 <style>
+  th,
+  td {
+    padding: 0.5rem;
+    border-bottom: 1px solid #ddd;
+    white-space: nowrap;
+  }
+
+  th {  
+    background-color: #374151; /* Tailwind's bg-gray-700 */
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+  
   .custom-select {
     display: block;
     width: 100%;
