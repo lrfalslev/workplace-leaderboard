@@ -50,3 +50,22 @@ export const POST: RequestHandler = async function ({ locals, request, platform 
         return new Response('Internal Error', { status: 500 });
     }
 };
+
+export const DELETE: RequestHandler = async function ({ locals, request, platform }) {
+    if (!locals.user || locals.user.role !== UserRole.Admin) {
+        return json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { date } = await request.json() as { date: string };
+
+    try {
+        const result = await platform?.env.DB.prepare('DELETE FROM topviews WHERE date = ?')
+            .bind(date)
+            .run();
+
+        return json({ success: true, deleted: result?.meta.changed_db });
+    } catch (err) {
+        console.error('Failed to delete topviews:', err);
+        return new Response('Internal Error', { status: 500 });
+    }
+};

@@ -9,9 +9,11 @@
     let date = new Date().toLocaleDateString('en-CA');
     
     let editModal = $state(false);
-    let deleteModal = $state(false);
+    let deleteContractorModal = $state(false);
+    let deleteTopviewModal = $state(false);
     let selectedCoordinator: Coordinator | null = null;
     let updatedName = $state('');
+    let selectedDate: string | null = null
 
     let coordinators: Coordinator[] = $state([]);
     let topviewsArray: Array<Record<string | number, any>> = $state([]);
@@ -133,6 +135,29 @@
             alert('❌ Could not delete project coordinator. Please try again.');
         }
     }
+    
+    async function deleteTopviews(date: string) {
+        try {
+            const response = await fetch(`/api/topviews`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ date })
+            });
+
+            if (!response.ok) {
+                alert('❌ Could not delete topviews. Please try again.');
+                return;
+            }
+
+            const index = topviewsArray.findIndex(entry => entry.date === date);
+            if (index !== -1) {
+                topviewsArray.splice(index, 1);
+            }
+        } catch (err) {
+            console.error('Error deleting topviews:', err);
+            alert('❌ Could not delete topviews. Please try again.');
+        }
+    }
 
     function addNewRow() {
         let dayEntry = topviewsArray.find(entry => entry.date === date);
@@ -178,7 +203,7 @@
                                 </button>
                                 <button onclick={() => {
                                     selectedCoordinator = coordinator;
-                                    deleteModal = true;
+                                    deleteContractorModal = true;
                                 }}>
                                     <TrashBinSolid class="dark:text-gray-400 dark:hover:text-red-800" />
                                 </button>
@@ -193,7 +218,17 @@
         </TableHead>
         <TableBody>
             {#each topviewsArray as topviews}
-                <EditableRow {coordinators} {topviews} />
+                <EditableRow {coordinators} {topviews}>
+                    <button
+                        slot="actions"
+                        onclick={() => {
+                            selectedDate = topviews.date;
+                            deleteTopviewModal = true;
+                        }}
+                    >
+                        <TrashBinSolid class="dark:text-gray-400 dark:hover:text-red-800" />
+                    </button>
+                </EditableRow>
             {/each}
         </TableBody>
     </Table>
@@ -211,17 +246,33 @@
     <Button class="mr-1" type="submit" value="success">Save</Button>
     <Button type="submit" value="decline" color="alternative">Cancel</Button>
 </Modal>
-<Modal form bind:open={deleteModal} size="xs" class="pt-8 text-center" onaction={async ({ action }) => {
+<Modal form bind:open={deleteContractorModal} size="xs" class="pt-8 text-center" onaction={async ({ action }) => {
     if (action === 'success' && selectedCoordinator) {
         {deleteCoordinator(selectedCoordinator.id)}
-        deleteModal = false;
+        deleteContractorModal = false;
     } else if (action === 'decline') {
-        deleteModal = false;
+        deleteContractorModal = false;
         selectedCoordinator = null;
     }
     }}>
     <p>
         Delete <strong>{selectedCoordinator?.name}</strong> and all their topviews?<br />
+        <span class="text-red-400">This action cannot be undone.</span>
+    </p>
+    <Button class="mr-2" type="submit" value="success">Delete</Button>
+    <Button type="submit" value="decline" color="alternative">Cancel</Button>
+</Modal>
+<Modal form bind:open={deleteTopviewModal} size="xs" class="pt-8 text-center" onaction={async ({ action }) => {
+    if (action === 'success' && selectedDate) {
+        {deleteTopviews(selectedDate)}
+        deleteTopviewModal = false;
+    } else if (action === 'decline') {
+        deleteTopviewModal = false;
+        selectedCoordinator = null;
+    }
+    }}>
+    <p>
+        Delete all topviews for date <strong>{selectedDate}</strong>?<br />
         <span class="text-red-400">This action cannot be undone.</span>
     </p>
     <Button class="mr-2" type="submit" value="success">Delete</Button>
