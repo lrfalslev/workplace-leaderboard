@@ -25,7 +25,7 @@ export async function verifyToken(token: string, env: App.Platform['env']): Prom
         if (typeof decoded === 'object' && decoded !== null) {
             const { id } = decoded as { id: string };
             const user = await env.DB
-                .prepare('SELECT id, username, role FROM users WHERE id = ?')
+                .prepare('SELECT id, username, role, projectCoordinatorId FROM users WHERE id = ?')
                 .bind(id)
                 .first<User>();
             return user ?? null;

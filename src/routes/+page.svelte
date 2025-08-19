@@ -17,7 +17,7 @@
     let coordinatorAcceptanceRate: string | null = null;
     let summary: SummaryRow[] = [];
     let options: ApexOptions = {
-        colors: ['#10B981', '#3B82F6'],
+        colors: ["#35bc00", "#BC00A3"],
         chart: {
             type: 'bar',
             width: '100%',
@@ -126,7 +126,7 @@
             if (!response.ok || !Array.isArray(json)) 
                 return;
                 
-            summary = json.sort((a, b) => b.totalFirstTimeApprovals - a.totalFirstTimeApprovals);
+            summary = json.sort((a, b) => a.coordinatorName.localeCompare(b.coordinatorName));
             options.xaxis!.categories = summary.map(row => row.coordinatorName);
 
             if ($user?.projectCoordinatorId != null)
