@@ -117,10 +117,10 @@
     });
 </script>
 
-<div class="max-h-[80vh] overflow-y-auto">
-  <table class="w-full text-center text-xs md:text-base dark:text-gray-400 min-w-max">
+<div class="flex justify-center md:w-[60%] max-w-screen-l max-h-[80vh] overflow-x-auto overflow-y-auto">
+  <table class="w-auto md:w-full text-center text-xs md:text-base dark:text-gray-400 min-w-full">
     <thead class="text-xs uppercase">
-      <tr>
+      <tr class="dark:bg-gray-600">
         <th class="px-6 py-3">Username</th>
         <th class="px-6 py-3">Role</th>
         <th class="px-6 py-3">Coordinator</th>
@@ -129,16 +129,23 @@
     </thead>
     <tbody>
       {#each users as user}
+        {@const coordinatorName = coordinators.find(c => c.id === user.projectCoordinatorId)?.name ?? '-'}
         <tr class="bg-white dark:bg-gray-800 dark:border-gray-700 border-b last:border-b-0">
-          <td>{user.username}</td>
+          <td class="max-w-[100px] sm:max-w-none overflow-hidden text-ellipsis whitespace-nowrap" 
+              title={user.username.length > 15 ? user.username : undefined}>
+              {user.username}
+          </td>
           <td>{user.role}</td>
-          <td>{coordinators.find(c => c.id === user.projectCoordinatorId)?.name ?? '-'}</td>
+            <td class="max-w-[100px] sm:max-w-none overflow-hidden text-ellipsis whitespace-nowrap"
+                title={coordinatorName.length > 15 ? coordinatorName : undefined}>
+                {coordinatorName}
+            </td>
           <td>
             <div class="inline-flex justify-center gap-2">
-                <Button disabled={user.id === $currentUser?.id} size="xs" onclick={() => openEditModal(user)}>
+                <Button class="w-6 h-6 sm:w-auto sm:h-auto" size="xs" onclick={() => openEditModal(user)}>
                     <EditSolid class="w-4 h-4" />
                 </Button>
-                <Button disabled={user.id === $currentUser?.id} size="xs" onclick={() => openDeleteModal(user)}>
+                <Button class="w-6 h-6 sm:w-auto sm:h-auto" size="xs" onclick={() => openDeleteModal(user)}>
                     <TrashBinSolid class="w-4 h-4" />
                 </Button>
             </div>
@@ -182,18 +189,33 @@
 </Modal>
 
 <style>
+    table {
+  width: 100%;
+  overflow-x: auto;
+  display: block;
+}
+
+/* For larger screens (desktop) */
+@media (min-width: 768px) {
+  table {
+    width: 80%;
+    margin: 0 auto; /* centers the table */
+    display: table; /* restores normal table layout */
+    overflow-x: visible;
+  }
+}
+
   th,
   td {
     padding: 0.5rem;
-    border-bottom: 1px solid #ddd;
     white-space: nowrap;
   }
 
   th {  
-    background-color: #374151; /* Tailwind's bg-gray-700 */
+    background-color: #4B5563; /* Tailwind's bg-gray-700 */
     position: sticky;
     top: 0;
-    z-index: 1;
+    z-index: 10;
   }
   
   .custom-select {
