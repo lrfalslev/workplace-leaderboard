@@ -91,9 +91,12 @@
                 <Button type="submit" class="px-2 py-1 text-sm" onclick={() => {editing = false;}}>Cancel</Button>
             </div>
         {:else}
-            <button onclick={() => {editing = true;}}>
-                <EditSolid class="dark:text-gray-400 dark:hover:text-white"/>
-            </button>
+            <div>
+                <button onclick={() => {editing = true;}}>
+                    <EditSolid class="dark:text-gray-400 dark:hover:text-white"/>
+                </button>
+                <slot name="actions"></slot>
+            </div>
         {/if}
     </TableBodyCell>
 </TableBodyRow>
