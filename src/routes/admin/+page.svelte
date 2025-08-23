@@ -4,6 +4,7 @@
     import {  EditSolid, TrashBinSolid } from "flowbite-svelte-icons";
     import EditableRow from "./components/EditableRow.svelte";
     import type { Topview, Coordinator } from '$lib/types';
+    import { showAlert } from "$lib/stores/alert";
     
     let name = $state('');
     let date = new Date().toLocaleDateString('en-CA');
@@ -26,10 +27,10 @@
             if (response.ok && Array.isArray(data)) {
                 coordinators = data.sort((a, b) => a.name.localeCompare(b.name));
             } else {
-                console.error('Unexpected response format:', data);
+                console.error('Unexpected response format: ', data);
             }
         } catch (err) {
-            console.error('Failed to fetch topviews:', err);
+            console.error('Failed to fetch topviews: ', err);
         }
     }
 
@@ -58,10 +59,10 @@
                 topviewsArray.sort((a, b) => b.date.localeCompare(a.date));
 
             } else {
-                console.error('Unexpected topviews format.', json);
+                console.error('Unexpected topviews format: ', json);
             }
         } catch (err) {
-            console.error('Failed to fetch topviews.', err);
+            console.error('Failed to fetch topviews: ', err);
         }
     }
 
@@ -79,15 +80,14 @@
             });
 
             if (!response.ok) {
-                alert('❌ Could not add project coordinator. Please try again.');
-                return;
+                throw new Error(await response.text());
             }
 
             name = '';
             fetchCoordinators();
         } catch (err) {
-            console.error('Error adding project coordinator.', err);
-            alert('❌ Could not add project coordinator. Please try again.');
+            console.error('Error adding project coordinator: ', err);
+            showAlert("Could not add project coordinator. Please try again.");
         }
     }
 
@@ -103,16 +103,15 @@
             });
 
             if (!response.ok) {
-                alert('❌ Could not update name. Please try again.');
-                return;
+                throw new Error(await response.text());
             }
 
             selectedCoordinator.name = trimmed;
             selectedCoordinator = null;
             updatedName = '';
         } catch (err) {
-            console.error('Error editing project coordinator.', err);
-            alert('❌ Could not update name. Please try again.');
+            console.error('Error editing team member: ', err);
+            showAlert('Could not update name. Please try again.');
         }
     }
 
@@ -123,7 +122,7 @@
             });
 
             if (!response.ok) {
-                alert('❌ Could not delete project coordinator. Please try again.');
+                throw new Error(await response.text());
             }
 
             const index = coordinators.findIndex(c => c.id === id);
@@ -131,8 +130,8 @@
                 coordinators.splice(index, 1);
             }
         } catch (err) {
-            console.error('Error deleting coordinator.', err);
-            alert('❌ Could not delete project coordinator. Please try again.');
+            console.error('Error deleting team member: ', err);
+            showAlert('Could not delete team member. Please try again.');
         }
     }
     
@@ -145,8 +144,7 @@
             });
 
             if (!response.ok) {
-                alert('❌ Could not delete topviews. Please try again.');
-                return;
+                throw new Error(await response.text());
             }
 
             const index = topviewsArray.findIndex(entry => entry.date === date);
@@ -154,8 +152,8 @@
                 topviewsArray.splice(index, 1);
             }
         } catch (err) {
-            console.error('Error deleting topviews:', err);
-            alert('❌ Could not delete topviews. Please try again.');
+            console.error('Error deleting topviews: ', err);
+            showAlert('Could not delete topviews. Please try again.');
         }
     }
 

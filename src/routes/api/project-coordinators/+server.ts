@@ -20,7 +20,7 @@ export const POST: RequestHandler = async function ({ locals, request, platform 
 
         return json({ success: true });
     } catch (err) {
-        console.error('Failed to insert into projectCoordinators:', err);
+        console.error('Failed to insert into projectCoordinators: ', err);
         return new Response('Internal Error', { status: 500 });
     }
 };
@@ -39,7 +39,7 @@ export const PUT: RequestHandler = async function ({ locals, request, platform }
 
         return json({ success: true });
     } catch (err) {
-        console.error('Failed to update into projectCoordinators:', err);
+        console.error('Failed to update into projectCoordinators: ', err);
         return new Response('Internal Error', { status: 500 });
     }
 };
@@ -62,7 +62,7 @@ export const DELETE: RequestHandler = async function ({ locals, url, platform })
 
         return json({ success: true, deleted: result?.meta.changed_db });
     } catch (err) {
-        console.error('Failed to delete projectCoordinator:', err);
+        console.error('Failed to delete projectCoordinator: ', err);
         return new Response('Internal Error', { status: 500 });
     }
 };

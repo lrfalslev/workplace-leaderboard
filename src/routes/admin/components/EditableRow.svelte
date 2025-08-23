@@ -2,6 +2,7 @@
     import { TableBodyRow, TableBodyCell, Input, Button } from "flowbite-svelte";
     import {  EditSolid } from "flowbite-svelte-icons";
     import type { Coordinator } from '$lib/types';
+    import { showAlert } from "$lib/stores/alert";
 
     export let coordinators: Coordinator[];
     export let topviews: Record<string | number, any>;    
@@ -46,8 +47,8 @@
             }
             editing = false;
         } catch (err) {
-            console.error('Error updating topviews.', err);
-            alert('❌ Could not save topviews. Please try again.');
+            console.error('Error updating topviews: ', err);
+            showAlert('Could not save topviews. Please try again.');
         }
     }
 </script>

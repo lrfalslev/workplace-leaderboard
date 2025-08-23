@@ -1,9 +1,9 @@
 <script lang="ts">
     import { onMount } from 'svelte';
-    import { Table, TableBody, TableHead, TableHeadCell, TableBodyRow, TableBodyCell, Button, Modal } from 'flowbite-svelte';
+    import { Button, Modal } from 'flowbite-svelte';
     import { EditSolid, TrashBinSolid } from 'flowbite-svelte-icons';
     import { UserRole, type Coordinator, type User } from '$lib/types';
-	import { user as currentUser } from '$lib/stores/user';
+    import { showAlert } from '$lib/stores/alert';
 
     let users: User[] = $state([]);
     let coordinators: Coordinator[] = $state([]);
@@ -22,10 +22,10 @@
             if (response.ok && Array.isArray(data)) {
                 users = data.sort((a, b) => a.username.localeCompare(b.username));
             } else {
-                console.error('Unexpected response format:', data);
+                console.error('Unexpected response format: ', data);
             }
         } catch (err) {
-            console.error('Failed to fetch users:', err);
+            console.error('Failed to fetch users: ', err);
         }
     }
 
@@ -44,8 +44,7 @@
             });
 
             if (!response.ok) {
-                alert('❌ Could not update user.');
-                return;
+                throw new Error(await response.text());
             }
 
             // Update local state
@@ -60,8 +59,8 @@
             selectedRole = UserRole.User;
             selectedCoordinator = null;
         } catch (err) {
-            console.error('Error updating user:', err);
-            alert('❌ Could not update user.');
+            console.error('Error updating user: ', err);
+            showAlert('Could not update user. Please try again.');
         }
     }
 
@@ -72,15 +71,15 @@
             });
 
             if (!response.ok) {
-                alert('❌ Could not delete user. Please try again.');
+                throw new Error(await response.text());
             }
 
             users = users.filter(user => user.id !== id);
             deleteModal = false;
             selectedUser = null;
         } catch (err) {
-            console.error('Error deleting user.', err);
-            alert('❌ Could not delete project user. Please try again.');
+            console.error('Error deleting user: ', err);
+            showAlert('Could not delete user. Please try again.');
         }
     }
     
@@ -92,10 +91,10 @@
             if (response.ok && Array.isArray(data)) {
                 coordinators = data.sort((a, b) => a.name.localeCompare(b.name));
             } else {
-                console.error('Unexpected response format:', data);
+                console.error('Unexpected response format: ', data);
             }
         } catch (err) {
-            console.error('Failed to fetch topviews:', err);
+            console.error('Failed to fetch topviews: ', err);
         }
     }
 

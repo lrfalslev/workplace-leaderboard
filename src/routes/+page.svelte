@@ -136,7 +136,7 @@
             options.series = getSeries(isAdmin, summary);
             options.tooltip = createTooltip(summary, isAdmin);
         } catch (error) {
-            console.error('Failed to fetch summary:', error);
+            console.error('Failed to fetch summary: ', error);
         }
     });
 </script>

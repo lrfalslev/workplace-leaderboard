@@ -50,7 +50,7 @@ export const PUT: RequestHandler = async function ({ locals, request, platform }
 
         return json({ success: true });
     } catch (err) {
-        console.error('Failed to update user:', err);
+        console.error('Failed to update user: ', err);
         return new Response('Internal Error', { status: 500 });
     }
 };
@@ -73,7 +73,7 @@ export const DELETE: RequestHandler = async function ({ locals, url, platform })
 
         return json({ success: true, deleted: result?.meta.changed_db });
     } catch (err) {
-        console.error('Failed to delete user:', err);
+        console.error('Failed to delete user: ', err);
         return new Response('Internal Error', { status: 500 });
     }
 };

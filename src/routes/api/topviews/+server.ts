@@ -46,7 +46,7 @@ export const POST: RequestHandler = async function ({ locals, request, platform 
 
         return json({ success: true });
     } catch (err) {
-        console.error('Failed to upsert topviews.', err);
+        console.error('Failed to upsert topviews: ', err);
         return new Response('Internal Error', { status: 500 });
     }
 };
@@ -65,7 +65,7 @@ export const DELETE: RequestHandler = async function ({ locals, request, platfor
 
         return json({ success: true, deleted: result?.meta.changed_db });
     } catch (err) {
-        console.error('Failed to delete topviews:', err);
+        console.error('Failed to delete topviews: ', err);
         return new Response('Internal Error', { status: 500 });
     }
 };
