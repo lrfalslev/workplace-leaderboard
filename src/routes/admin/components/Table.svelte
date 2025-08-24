@@ -1,12 +1,10 @@
 <script lang="ts">
     import { Button, Modal } from 'flowbite-svelte';
     import { EditSolid, TrashBinSolid } from 'flowbite-svelte-icons';
-    import { UserRole } from '$lib/types';
+    import { UserRoleLabels, TeamTypeLabels, UserRole, TeamType } from '$lib/types';
     import { showAlert } from '$lib/stores/alert';
     import { CirclePlusSolid } from "flowbite-svelte-icons";
-
-    const roleOptions = Object.values(UserRole);
-    
+        
     type RelatedItem = {
         id: number;
         name: string;
@@ -37,19 +35,22 @@
 
     let selected: any = $state(null);
     let selectedRole: string = $state('');
+    let selectedType: string = $state('');
     let selectedTeam: number | null = $state(null);
     let selectedTeamMember: number | null = $state(null);
     let selectedName: string = $state('');
     
-    //adding
+    //creation fields
     let selectedTeamName: string = $state('');
+    let selectedTeamType: TeamType = $state(TeamType.TICKET_ONLY);
     let selectedTeamMemberName: string = $state('');
-    let selectedTeamMemberTeam: number | null = $state(null);
+    let selectedTeamMemberTeam: string = $state('');
     
     function openEdit(row: any) {
         selected = row;
         selectedName = row.name ?? row.username ?? '';
         selectedRole = row.role ?? '';
+        selectedType = row.type ?? '';
         selectedTeam = row.team_id ?? null;
         selectedTeamMember = row.team_member_id ?? null;
         editModal = true;
@@ -66,7 +67,8 @@
                     return;
                 }
                 payload = { 
-                    name: selectedTeamName.trim()
+                    name: selectedTeamName.trim(),
+                    type: selectedTeamType
                 }
                 break;
             case 'team-members':
@@ -74,9 +76,14 @@
                     showAlert('Team Member name is required.');
                     return;
                 }
+                const teamId = Number(selectedTeamMemberTeam);
+                if (!teamId) {
+                    showAlert('Team is required.');
+                    return;
+                }
                 payload = { 
                     name: selectedTeamMemberName.trim(), 
-                    teamId: selectedTeamMemberTeam
+                    teamId: teamId
                 };
                 break;
             default:
@@ -131,7 +138,8 @@
             case 'teams':
                 payload = { 
                     teamId: selected.id, 
-                    name: selectedName.trim()
+                    name: selectedName.trim(),
+                    type: selectedType
                 }
                 break;
             case 'team-members':
@@ -143,7 +151,7 @@
                 break;
             case 'users':
                 payload = { 
-                    id: selected.id, 
+                    userId: selected.id, 
                     role: selectedRole, 
                     teamId: selected.team_id ?? null, 
                     teamMemberId: selectedTeamMember ?? null 
@@ -177,29 +185,23 @@
     <form class="flex flex-row flex-nowrap justify-center items-center gap-2 mb-4 overflow-x-auto"
         onsubmit={addItem}>
         {#if resource === 'teams'}
-            <input
-            type="text"
-            class="custom-input"
-            placeholder="Team name"
-            bind:value={selectedTeamName}
-            />
+            <input type="text" class="custom-input" placeholder="Team Name" bind:value={selectedTeamName} />
+            
+            <select bind:value={selectedTeamType} class="custom-select">
+            <option value="" disabled>Team Type</option>
+            {#each Object.values(TeamType) as teamType}
+                <option value={teamType}>{TeamTypeLabels[teamType]}</option>
+            {/each}
+            </select>
         {:else}
-            <select
-            class="custom-select"
-            bind:value={selectedTeamMemberTeam}
-            >
-            <option value="" disabled selected>Select team</option>
+            <select bind:value={selectedTeamMemberTeam} class="custom-select">
+            <option value="" disabled selected>Team</option>
             {#each teams as team}
                 <option value={team.id}>{team.name}</option>
             {/each}
             </select>
         
-            <input
-                type="text"
-                class="custom-input"
-                placeholder="Member name"
-                bind:value={selectedTeamMemberName}
-            />
+            <input type="text" class="custom-input" placeholder="Member Name" bind:value={selectedTeamMemberName} />
         {/if}
 
         <Button onclick={addItem}>
@@ -224,7 +226,7 @@
                   <td>{row.id}</td>
                   <td>{row.username || row.name}</td>
                   {#if resource === 'users'}
-                      <td>{row.role ?? '-'}</td>
+                      <td>{UserRoleLabels[row.role as keyof typeof UserRoleLabels] ?? '-'}</td>
                   {/if}
                   {#if (resource === 'users' || resource === 'team-members')}
                       <td>{teams.find((team: RelatedItem) => team.id === row.team_id)?.name ?? '-'}</td>
@@ -233,7 +235,7 @@
                       <td>{teamMembers.find((teamMember: RelatedItem) => teamMember.id === row.team_member_id)?.name ?? '-'}</td>
                   {/if}        
                   {#if (resource === 'teams')}
-                      <td>{row.type ?? '-'}</td>
+                      <td>{TeamTypeLabels[row.type as keyof typeof TeamTypeLabels] ?? '-'}</td>
                   {/if}
                   <td>
                       <Button onclick={() => openEdit(row)}><EditSolid /></Button>
@@ -253,8 +255,8 @@
     {#if resource === 'users'}
         <select bind:value={selectedRole} class="custom-select">
         <option value="" disabled>Assigned Role</option>
-        {#each roleOptions as role}
-            <option value={role}>{role}</option>
+        {#each Object.values(UserRole) as userRole}
+            <option value={userRole}>{UserRoleLabels[userRole]}</option>
         {/each}
         </select>
 
@@ -273,6 +275,15 @@
                 {/each}
             </select>
         {/if}
+    {:else if resource === 'teams' }
+        <input type="text" bind:value={selectedName} placeholder="Name" class="custom-input" />
+        
+        <select bind:value={selectedType} class="custom-select">
+        <option value="" disabled>Team Type</option>
+        {#each Object.values(TeamType) as teamType}
+            <option value={teamType}>{TeamTypeLabels[teamType]}</option>
+        {/each}
+        </select>
     {:else if resource === 'team-members'}
         <input type="text" bind:value={selectedName} placeholder="Name" class="custom-input" />
 
@@ -282,8 +293,6 @@
             <option value={team.id}>{team.name}</option>
         {/each}
         </select>
-    {:else if resource === 'teams' }
-        <input type="text" bind:value={selectedName} placeholder="Name" class="custom-input" />
     {/if}
     <div class="flex justify-center gap-2">
         <Button onclick={() => selected && updateItem()}>Update</Button>

@@ -84,7 +84,7 @@
 			</Alert>
 		</div>
 	{/if}
-	{#if $user && $user.role == UserRole.Admin}
+	{#if $user && $user.role == UserRole.ADMIN}
 		<nav class="w-full text-white flex items-center justify-center sm:justify-end text-xs sm:text-sm">
 			<Button href="/" class="py-1 m-0 mt-1" color="alternative">
 				<span class="hidden sm:inline">Leaderboard</span>

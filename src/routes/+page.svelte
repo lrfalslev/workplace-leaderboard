@@ -6,7 +6,7 @@
     import { user } from '$lib/stores/user';
     import { UserRole, type SummaryRow } from '$lib/types';
     
-    const isAdmin = $user?.role === UserRole.Admin;
+    const isAdmin = $user?.role === UserRole.ADMIN;
 
     let summary: SummaryRow[] = [];
     let teamMemberName: string | null = null;

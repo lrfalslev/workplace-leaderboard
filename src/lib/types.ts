@@ -1,17 +1,29 @@
 export enum UserRole {
-    User = 'user',
-    Admin = 'admin',
-    Manager = 'manager'
+  USER = 'user',
+  ADMIN = 'admin',
+  MANAGER = 'manager'
 }
 
+export const UserRoleLabels: Record<UserRole, string> = {
+  [UserRole.USER]: 'User',
+  [UserRole.ADMIN]: 'Admin',
+  [UserRole.MANAGER]: 'Manager'
+};
+
 export enum TeamType {
-    TicketAndTotal = 'ticket_and_total',
-    TicketOnly = 'ticket_only'
+  TICKET_AND_TOTAL = 'ticket_and_total',
+  TICKET_ONLY = 'ticket_only'
 }
+
+export const TeamTypeLabels: Record<TeamType, string> = {
+  [TeamType.TICKET_AND_TOTAL]: 'Tickets And Totals',
+  [TeamType.TICKET_ONLY]: 'Tickets Only'
+};
 
 export type Team = {
     id: number;
     name: string;
+    type: TeamType;
 }
 
 export type TeamMember = {

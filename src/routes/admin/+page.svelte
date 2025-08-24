@@ -19,7 +19,7 @@
             const data = await response.json();
 
             if (response.ok && Array.isArray(data)) {
-                teams = data.sort((a, b) => a.name.localeCompare(b.name));
+                teams = sortTeams(data);
             } else {
                 console.error('Unexpected response format: ', data);
             }
@@ -34,7 +34,7 @@
             const data = await response.json();
 
             if (response.ok && Array.isArray(data)) {
-                teamMembers = data.sort((a, b) => a.name.localeCompare(b.name));
+                teamMembers = sortTeamMembers(data);
             } else {
                 console.error('Unexpected response format: ', data);
             }
@@ -48,7 +48,7 @@
             const response = await fetch('/api/users');
             const data = await response.json();
             if (response.ok && Array.isArray(data)) {
-                users = data.sort((a, b) => a.username.localeCompare(b.username));
+                users = sortUsers(data);
             } else {
                 console.error('Unexpected response format: ', data);
             }
@@ -59,36 +59,48 @@
 
     function handleAdd(resource: string, newItem: any) {
       if (resource === 'teams') {
-        teams = [...teams, newItem];
+        teams = sortTeams([...teams, newItem]);
       } else if (resource === 'team-members') {
-        teamMembers = [...teamMembers, newItem];
+        teamMembers = sortTeamMembers([...teamMembers, newItem]);
       }
     }
 
     function handleDelete(resource: string, id: number) {
       if (resource === 'teams') {
-        teams = teams.filter(team => team.id !== id);
+        teams = sortTeams(teams.filter(team => team.id !== id));
       } else if (resource === 'team-members') {
-        teamMembers = teamMembers.filter(member => member.id !== id);
+        teamMembers = sortTeamMembers(teamMembers.filter(member => member.id !== id));
       } else if (resource === 'users') {
-        users = users.filter(user => user.id !== id);
+        users = sortUsers(users.filter(user => user.id !== id));
       }
     }
     
     function handleUpdate(resource: string, updatedItem: any) {
       if (resource === 'teams') {
-        teams = teams.map(team =>
+        teams = sortTeams(teams.map(team =>
           team.id === updatedItem.id ? updatedItem : team
-        );
+        ));
       } else if (resource === 'team-members') {
-        teamMembers = teamMembers.map(member =>
+        teamMembers = sortTeamMembers(teamMembers.map(member =>
           member.id === updatedItem.id ? updatedItem : member
-        );
+        ));
       } else if (resource === 'users') {
-        users = users.map(user =>
+        users = sortUsers(users.map(user =>
           user.id === updatedItem.id ? updatedItem : user
-        );
+        ));
       }
+    }
+    
+    function sortTeams(list: Team[]): Team[] {
+      return list.slice().sort((a, b) => a.name.localeCompare(b.name));
+    }
+
+    function sortTeamMembers(list: TeamMember[]): TeamMember[] {
+      return list.slice().sort((a, b) => a.name.localeCompare(b.name));
+    }
+
+    function sortUsers(list: User[]): User[] {
+      return list.slice().sort((a, b) => a.username.localeCompare(b.username));
     }
 
     onMount(() => {

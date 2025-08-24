@@ -7,7 +7,7 @@ export const GET: RequestHandler = async function ({ platform }) {
 };
 
 export const POST: RequestHandler = async function ({ locals, request, platform }) {
-    if (!locals.user || locals.user.role !== UserRole.Admin) {
+    if (!locals.user || locals.user.role !== UserRole.ADMIN) {
         return json({ error: 'Unauthorized' }, { status: 401 });
     }
     
@@ -30,7 +30,7 @@ export const POST: RequestHandler = async function ({ locals, request, platform 
 };
 
 export const PUT: RequestHandler = async function ({ locals, request, platform }) {
-    if (!locals.user || locals.user.role !== UserRole.Admin) {
+    if (!locals.user || locals.user.role !== UserRole.ADMIN) {
         return json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -54,7 +54,7 @@ export const PUT: RequestHandler = async function ({ locals, request, platform }
 };
 
 export const DELETE: RequestHandler = async function ({ locals, url, platform }) {
-    if (!locals.user || locals.user.role !== UserRole.Admin) {
+    if (!locals.user || locals.user.role !== UserRole.ADMIN) {
         return json({ error: 'Unauthorized' }, { status: 401 });
     }
 

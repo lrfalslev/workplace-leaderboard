@@ -7,15 +7,15 @@ export const GET: RequestHandler = async function ({ platform }) {
 };
 
 export const POST: RequestHandler = async function ({ locals, request, platform }) {
-    if (!locals.user || locals.user.role !== UserRole.Admin) {
+    if (!locals.user || locals.user.role !== UserRole.ADMIN) {
         return json({ error: 'Unauthorized' }, { status: 401 });
     }
     
-    const { name } = await request.json() as { name: string };
+    const { name, type } = await request.json() as { name: string, type: string };
 
     try {
-        await platform?.env.DB.prepare('INSERT INTO teams (name) VALUES (?)')
-            .bind(name)
+        await platform?.env.DB.prepare('INSERT INTO teams (name, type) VALUES (?, ?)')
+            .bind(name, type)
             .run();
             
         const newTeam = await platform?.env.DB
@@ -30,15 +30,15 @@ export const POST: RequestHandler = async function ({ locals, request, platform 
 };
 
 export const PUT: RequestHandler = async function ({ locals, request, platform }) {
-    if (!locals.user || locals.user.role !== UserRole.Admin) {
+    if (!locals.user || locals.user.role !== UserRole.ADMIN) {
         return json({ error: 'Unauthorized' }, { status: 401 });
     }
-
-    const { teamId, name } = await request.json() as { teamId: number, name: string };
+    
+    const { teamId, name, type } = await request.json() as { teamId: number, name: string, type: string };
 
     try {
-        await platform?.env.DB.prepare('UPDATE teams SET name = ? WHERE id = ?')
-            .bind(name, teamId)
+        await platform?.env.DB.prepare('UPDATE teams SET name = ?, type = ? WHERE id = ?')
+            .bind(name, type, teamId)
             .run();
             
         const updatedTeam = await platform?.env.DB
@@ -54,7 +54,7 @@ export const PUT: RequestHandler = async function ({ locals, request, platform }
 };
 
 export const DELETE: RequestHandler = async function ({ locals, url, platform }) {
-    if (!locals.user || locals.user.role !== UserRole.Admin) {
+    if (!locals.user || locals.user.role !== UserRole.ADMIN) {
         return json({ error: 'Unauthorized' }, { status: 401 });
     }
 
