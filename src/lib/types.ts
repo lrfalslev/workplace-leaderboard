@@ -4,6 +4,11 @@ export enum UserRole {
     Manager = 'manager'
 }
 
+export enum TeamType {
+    TicketAndTotal = 'ticket_and_total',
+    TicketOnly = 'ticket_only'
+}
+
 export type Team = {
     id: number;
     name: string;
@@ -28,4 +33,14 @@ export type Topview = {
     firstTimeApprovals: number;
     totalSubmissions: number;
     teamMemberId: number;
+}
+
+export type SummaryRow = {
+    teamMemberId: number;
+    teamMemberName: string;
+    teamId: number;
+    teamName: string;
+    totalTickets: number;
+    totalWorkItemTickets: number;
+    totalWorkItems: number;
 }

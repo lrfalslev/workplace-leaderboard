@@ -1,6 +1,7 @@
 CREATE TABLE IF NOT EXISTS teams (
     id INTEGER PRIMARY KEY AUTOINCREMENT, 
-    name TEXT NOT NULL UNIQUE
+    name TEXT NOT NULL UNIQUE,
+    type TEXT DEFAULT 'ticket_only' CHECK(type IN ('ticket_and_total', 'ticket_only'))
 );
 
 CREATE TABLE IF NOT EXISTS team_members (
@@ -21,23 +22,23 @@ CREATE TABLE IF NOT EXISTS users (
     FOREIGN KEY (team_member_id) REFERENCES team_members(id) ON DELETE SET NULL
 );
 
-CREATE TABLE IF NOT EXISTS topviews (
+CREATE TABLE IF NOT EXISTS work_items (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     date DATE NOT NULL,
-    first_time_approvals INTEGER NOT NULL,
-    total_submissions INTEGER NOT NULL,
+    tickets_awarded INTEGER NOT NULL,    
+    total_work_items INTEGER,
     team_member_id INTEGER NOT NULL,
-    FOREIGN KEY (team_member_id) REFERENCES team_members(id) ON DELETE CASCADE
+    FOREIGN KEY (team_member_id) REFERENCES team_members(id) ON DELETE CASCADE,
+    UNIQUE(team_member_id, date)
 );
-CREATE UNIQUE INDEX topviews_team_member_date_unique ON topviews(team_member_id, date);
-CREATE INDEX idx_topviews_team_member_id ON topviews(team_member_id);
 
-CREATE TABLE IF NOT EXISTS tickets (
+CREATE TABLE IF NOT EXISTS bonus_tickets (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     date DATE NOT NULL,
+    description TEXT NOT NULL,
     tickets_awarded INTEGER NOT NULL,
     team_member_id INTEGER NOT NULL,
-    FOREIGN KEY (team_member_id) REFERENCES team_members(id) ON DELETE CASCADE
+    manager_id INTEGER NOT NULL,
+    FOREIGN KEY (team_member_id) REFERENCES team_members(id) ON DELETE CASCADE,
+    FOREIGN KEY (manager_id) REFERENCES users(id) ON DELETE SET NULL
 );
-CREATE UNIQUE INDEX tickets_team_member_date_unique ON tickets(team_member_id, date);
-CREATE INDEX idx_tickets_team_member_id ON tickets(team_member_id);

@@ -6,10 +6,10 @@ export const GET: RequestHandler = async function ({ platform }) {
         .prepare(`
             SELECT 
                 date,
-                first_time_approvals,
-                total_submissions,
+                tickets_awarded,
+                total_work_items,
                 team_member_id
-            FROM topviews
+            FROM work_items
         `)
         .all();
     return json(queryResult?.results);
@@ -22,8 +22,8 @@ export const POST: RequestHandler = async function ({ locals, request, platform 
 
     const topviews = await request.json() as {
         date: string;
-        firstTimeApprovals: number;
-        totalSubmissions: number;
+        ticketsAwarded: number;
+        totalWorkItems: number;
         teamMemberId: number;
     }[];
 
@@ -34,13 +34,13 @@ export const POST: RequestHandler = async function ({ locals, request, platform 
             const formattedDate = new Date(topview.date).toISOString().split('T')[0];
 
             await db?.prepare(`
-                INSERT INTO topviews (date, first_time_approvals, total_submissions, team_member_id)
+                INSERT INTO work_items (date, tickets_awarded, total_work_items, team_member_id)
                 VALUES (?, ?, ?, ?)
                 ON CONFLICT(date, team_member_id) DO UPDATE SET
-                    firstTimeApprovals = excluded.firstTimeApprovals,
-                    totalSubmissions = excluded.totalSubmissions
+                    tickets_awarded = excluded.tickets_awarded,
+                    total_work_items = excluded.total_work_items
             `)
-            .bind(formattedDate, topview.firstTimeApprovals, topview.totalSubmissions, topview.teamMemberId)
+            .bind(formattedDate, topview.ticketsAwarded, topview.totalWorkItems, topview.teamMemberId)
             .run();
         }
 
@@ -56,11 +56,16 @@ export const DELETE: RequestHandler = async function ({ locals, request, platfor
         return json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { date } = await request.json() as { date: string };
+    const { ticketIds } = await request.json() as { ticketIds: number[] };
+
+    if (!Array.isArray(ticketIds) || ticketIds.length === 0) {
+        return json({ error: 'No IDs provided' }, { status: 400 });
+    }
 
     try {
-        const result = await platform?.env.DB.prepare('DELETE FROM topviews WHERE date = ?')
-            .bind(date)
+        const placeholders = ticketIds.map(() => '?').join(', ');
+        const result = await platform?.env.DB.prepare('DELETE FROM work_items WHERE id IN (${placeholders})')
+            .bind(...ticketIds)
             .run();
 
         return json({ success: true, deleted: result?.meta.changed_db });

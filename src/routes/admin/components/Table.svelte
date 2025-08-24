@@ -224,13 +224,16 @@
                   <td>{row.id}</td>
                   <td>{row.username || row.name}</td>
                   {#if resource === 'users'}
-                      <td>{row.role}</td>
+                      <td>{row.role ?? '-'}</td>
                   {/if}
                   {#if (resource === 'users' || resource === 'team-members')}
                       <td>{teams.find((team: RelatedItem) => team.id === row.team_id)?.name ?? '-'}</td>
                   {/if}            
                   {#if (resource === 'users')}
                       <td>{teamMembers.find((teamMember: RelatedItem) => teamMember.id === row.team_member_id)?.name ?? '-'}</td>
+                  {/if}        
+                  {#if (resource === 'teams')}
+                      <td>{row.type ?? '-'}</td>
                   {/if}
                   <td>
                       <Button onclick={() => openEdit(row)}><EditSolid /></Button>

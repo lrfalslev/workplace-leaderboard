@@ -9,7 +9,7 @@
     let users: User[] = $state([]);
 
     // column definitions
-    const teamColumns = ['Id', 'Team Name', 'Edit'];
+    const teamColumns = ['Id', 'Team Name', 'Type', 'Edit'];
     const teamMemberColumns = ['Id', 'Name', 'Team', 'Edit'];
     const userColumns = ['Id', 'Username', 'Role', 'Team', 'Team Member', 'Edit'];
 
