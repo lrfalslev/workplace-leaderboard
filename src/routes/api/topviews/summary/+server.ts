@@ -15,7 +15,7 @@ export const GET: RequestHandler = async function ({ platform }) {
         .all();
 
     if (!queryResult?.results) {
-        return new Response('Failed to retrieve summary', { status: 500 });
+        return new Response('Failed to retrieve topview summary: ', { status: 500 });
     }
 
     return json(queryResult?.results);

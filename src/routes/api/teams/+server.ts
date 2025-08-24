@@ -2,7 +2,7 @@ import { UserRole } from '$lib/types';
 import { json, type RequestHandler } from '@sveltejs/kit';
 
 export const GET: RequestHandler = async function ({ platform }) {
-    const queryResult = await platform?.env.DB.prepare('SELECT * FROM team_members').all();
+    const queryResult = await platform?.env.DB.prepare('SELECT * FROM teams').all();
     return json(queryResult?.results);
 };
 
@@ -11,16 +11,16 @@ export const POST: RequestHandler = async function ({ locals, request, platform 
         return json({ error: 'Unauthorized' }, { status: 401 });
     }
     
-    const { name, teamId } = await request.json() as { name: string, teamId: number };
+    const { name } = await request.json() as { name: string };
 
     try {
-        await platform?.env.DB.prepare('INSERT INTO team_members (name, team_id) VALUES (?, ?)')
-            .bind(name, teamId)
+        await platform?.env.DB.prepare('INSERT INTO teams (name) VALUES (?)')
+            .bind(name)
             .run();
 
         return json({ success: true });
     } catch (err) {
-        console.error('Failed to insert team member: ', err);
+        console.error('Failed to insert team: ', err);
         return new Response('Internal Error', { status: 500 });
     }
 };
@@ -30,16 +30,16 @@ export const PUT: RequestHandler = async function ({ locals, request, platform }
         return json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { teamMemberId, name, teamId } = await request.json() as { teamMemberId: number, name: string, teamId: number };
+    const { teamId, name } = await request.json() as { teamId: number, name: string };
 
     try {
-        await platform?.env.DB.prepare('UPDATE team_members SET name = ?, team_id = ? WHERE id = ?')
-            .bind(name, teamId, teamMemberId)
+        await platform?.env.DB.prepare('UPDATE teams SET name = ? WHERE id = ?')
+            .bind(name, teamId)
             .run();
 
         return json({ success: true });
     } catch (err) {
-        console.error('Failed to update team member: ', err);
+        console.error('Failed to update team: ', err);
         return new Response('Internal Error', { status: 500 });
     }
 };
@@ -56,13 +56,13 @@ export const DELETE: RequestHandler = async function ({ locals, url, platform })
     }
 
     try {
-        const result = await platform?.env.DB.prepare('DELETE FROM team_members WHERE id = ?')
+        const result = await platform?.env.DB.prepare('DELETE FROM teams WHERE id = ?')
             .bind(id)
             .run();
 
         return json({ success: true, deleted: result?.meta.changed_db });
     } catch (err) {
-        console.error('Failed to delete team member: ', err);
+        console.error('Failed to delete team: ', err);
         return new Response('Internal Error', { status: 500 });
     }
 };
