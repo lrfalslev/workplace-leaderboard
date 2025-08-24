@@ -31,7 +31,6 @@
 		});
 
 		if (res.ok) {
-			await invalidate('app:auth');
         	signUpModal = false;
 			error = "";
 		} else {
@@ -50,9 +49,9 @@
 		});
 
 		if (res.ok) {
-			await invalidate('app:auth');
         	loginModal = false;
 			error = "";
+			window.location.href = '/';
 		} else {
 			error = "Login failed. Please check your credentials.";
 			console.error(await res.text());
@@ -65,8 +64,7 @@
 		});
 
 		if (res.ok) {        
-			await invalidate('app:auth');
-			goto('/');
+			window.location.href = '/';
 		} else {
 			console.error(await res.text());
 		}

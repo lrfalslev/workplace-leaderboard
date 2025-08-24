@@ -1,6 +1,5 @@
 import type { LayoutServerLoad } from './$types';
 
-export const load: LayoutServerLoad = async ({ locals, depends }) => { 
-    depends('app:auth'); 
+export const load: LayoutServerLoad = async ({ locals }) => {
     return { user: locals.user }; 
 };
