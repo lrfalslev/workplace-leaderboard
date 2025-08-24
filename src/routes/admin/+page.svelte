@@ -4,9 +4,9 @@
     import type { Team, TeamMember, User } from '$lib/types';
 
     // let users: User[] = $state([]);
-    let teams: Team[] = [];
-    let teamMembers: TeamMember[] = [];
-    let users: User[] = [];
+    let teams: Team[] = $state([]);
+    let teamMembers: TeamMember[] = $state([]);
+    let users: User[] = $state([]);
 
     // column definitions
     const teamColumns = ['Id', 'Team Name', 'Edit'];
@@ -57,6 +57,40 @@
         }
     }
 
+    function handleAdd(resource: string, newItem: any) {
+      if (resource === 'teams') {
+        teams = [...teams, newItem];
+      } else if (resource === 'team-members') {
+        teamMembers = [...teamMembers, newItem];
+      }
+    }
+
+    function handleDelete(resource: string, id: number) {
+      if (resource === 'teams') {
+        teams = teams.filter(team => team.id !== id);
+      } else if (resource === 'team-members') {
+        teamMembers = teamMembers.filter(member => member.id !== id);
+      } else if (resource === 'users') {
+        users = users.filter(user => user.id !== id);
+      }
+    }
+    
+    function handleUpdate(resource: string, updatedItem: any) {
+      if (resource === 'teams') {
+        teams = teams.map(team =>
+          team.id === updatedItem.id ? updatedItem : team
+        );
+      } else if (resource === 'team-members') {
+        teamMembers = teamMembers.map(member =>
+          member.id === updatedItem.id ? updatedItem : member
+        );
+      } else if (resource === 'users') {
+        users = users.map(user =>
+          user.id === updatedItem.id ? updatedItem : user
+        );
+      }
+    }
+
     onMount(() => {
         fetchTeams();
         fetchTeamMembers();
@@ -64,26 +98,41 @@
     });
 </script>
 
-<h2 class="text-xl font-bold mb-2">Users</h2>
-<Table
-  columns={userColumns}
-  data={users}
-  resource="users"
-  teams={teams}
-  teamMembers ={teamMembers}
-/>
+<section class="m-4">
+  <h2 class="text-xl font-bold mb-4 text-center">Users</h2>
+  <Table
+    columns={userColumns}
+    data={users}
+    resource="users"
+    teams={teams}
+    teamMembers={teamMembers}
+    onAdd={handleAdd}
+    onDelete={handleDelete}
+    onUpdate={handleUpdate}
+  />
+</section>
 
-<h2 class="text-xl font-bold mt-8 mb-2">Teams</h2>
-<Table
-  columns={teamColumns}
-  data={teams}
-  resource="teams"
-/>
+<section class="m-4">
+  <h2 class="text-xl font-bold mb-4 text-center">Teams</h2>
+  <Table
+    columns={teamColumns}
+    data={teams}
+    resource="teams"
+    onAdd={handleAdd}
+    onDelete={handleDelete}
+    onUpdate={handleUpdate}
+  />
+</section>
 
-<h2 class="text-xl font-bold mt-8 mb-2">Team Members</h2>
-<Table
-  columns={teamMemberColumns}
-  data={teamMembers}
-  resource="team-members"
-  teams={teams}
-/>
+<section class="m-4">
+  <h2 class="text-xl font-bold mb-4 text-center">Team Members</h2>
+  <Table
+    columns={teamMemberColumns}
+    data={teamMembers}
+    resource="team-members"
+    teams={teams}
+    onAdd={handleAdd}
+    onDelete={handleDelete}
+    onUpdate={handleUpdate}
+  />
+</section>

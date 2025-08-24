@@ -24,7 +24,12 @@ export const POST: RequestHandler = async function ({ request, platform }) {
         await db?.prepare('INSERT INTO users (username, password) VALUES (?, ?)')
             .bind(user.username, hashed)
             .run();
-            return new Response('User created', { status: 201 });
+            
+        const newUser = await platform?.env.DB
+            .prepare('SELECT * FROM users WHERE id = last_insert_rowid()')
+            .first();
+
+        return json(newUser);
     } catch (err) {
         console.error(err);
         return new Response('Signup failed', { status: 400 });
@@ -36,8 +41,8 @@ export const PUT: RequestHandler = async function ({ locals, request, platform }
         return json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id, role, teamId, teamMemberId } = await request.json() as { 
-        id: number,
+    const { userId, role, teamId, teamMemberId } = await request.json() as { 
+        userId: number,
         role: string,
         teamId: number | null,
         teamMemberId: number | null
@@ -46,12 +51,17 @@ export const PUT: RequestHandler = async function ({ locals, request, platform }
     try {
         await platform?.env.DB
             .prepare(`UPDATE users 
-                        SET role = ?, teamId = ?, team_member_id = ? 
+                        SET role = ?, team_id = ?, team_member_id = ? 
                         WHERE id = ?`)
-            .bind(role, teamId, teamMemberId)
+            .bind(role, teamId, teamMemberId, userId)
             .run();
+            
+        const updatedUser = await platform?.env.DB
+            .prepare('SELECT * FROM users WHERE id = ?')
+            .bind(userId)
+            .first();
 
-        return json({ success: true });
+        return json(updatedUser);
     } catch (err) {
         console.error('Failed to update user: ', err);
         return new Response('Internal Error', { status: 500 });

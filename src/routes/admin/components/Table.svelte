@@ -12,12 +12,24 @@
         name: string;
     };
 
-    let { columns, data, resource, teams = [] as RelatedItem[], teamMembers = [] as RelatedItem[] } = $props<{ 
+    let { 
+        columns,
+        data,
+        resource,
+        teams = [] as RelatedItem[],
+        teamMembers = [] as RelatedItem[],
+        onAdd,
+        onDelete,
+        onUpdate
+    } = $props<{ 
         columns: string[];
         data: any[];
         resource: string;
         teams?: RelatedItem[];
         teamMembers?: RelatedItem[];
+        onAdd: (resource: string, newItem: any) => void;
+        onDelete: (resource: string, id: number) => void;
+        onUpdate: (resource: string, updatedItem: any) => void;
     }>();
 
     let deleteModal = $state(false);
@@ -43,6 +55,74 @@
         editModal = true;
     }
     function openDelete(row: any) { selected = row; deleteModal = true; }
+
+    async function addItem() {
+        let payload: any;
+        
+        switch (resource) {
+            case 'teams':
+                if (!selectedTeamName.trim()) {
+                    showAlert('Team name is required.');
+                    return;
+                }
+                payload = { 
+                    name: selectedTeamName.trim()
+                }
+                break;
+            case 'team-members':
+                if (!selectedTeamMemberName.trim()) {
+                    showAlert('Team Member name is required.');
+                    return;
+                }
+                payload = { 
+                    name: selectedTeamMemberName.trim(), 
+                    teamId: selectedTeamMemberTeam
+                };
+                break;
+            default:
+                return;
+        }
+        try {
+            const res = await fetch(`/api/${resource}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!res.ok) 
+                throw new Error(await res.text());
+
+            const newItem = await res.json();
+            onAdd(resource, newItem);
+            resetSelection();
+
+        } catch (err) {
+            console.error(`Error adding ${resource}: `, err);
+            showAlert(`Error adding ${resource}`);
+        }
+    }
+    
+    function resetSelection() {
+        if (resource === 'teams') {
+            selectedTeamName = '';
+        } else if (resource === 'team-members') {
+            selectedTeamMemberName = '';
+        }
+    }
+
+    async function deleteItem(id: any) {
+        try {
+            const res = await fetch(`/api/${resource}?id=${id}`, { method: 'DELETE' });
+            if (!res.ok) 
+                throw new Error(await res.text());
+            
+            deleteModal = false;
+            onDelete(resource, id);
+            resetSelection();
+        } catch (err) {
+            showAlert(`Error deleting ${resource}`);
+        }
+    }
 
     async function updateItem() {
         let payload: any;
@@ -83,129 +163,84 @@
             if (!res.ok) 
                 throw new Error(await res.text());
 
+            const updatedItem = await res.json();
+            onUpdate(resource, updatedItem);
             editModal = false;
             selected = null;
         } catch (err) {
             showAlert(`Error updating ${resource}`);
         }
     }
-
-    async function deleteItem(id: any) {
-        try {
-            const res = await fetch(`/api/${resource}?id=${id}`, { method: 'DELETE' });
-        if (!res.ok) throw new Error(await res.text());
-            deleteModal = false;
-        } catch (err) {
-            showAlert(`Error deleting ${resource}`);
-        }
-    }
-
-    async function addItem() {
-        let payload: any;
-        
-        switch (resource) {
-            case 'teams':
-                payload = { 
-                    name: selectedTeamName.trim()
-                }
-                break;
-            case 'team-members':
-                payload = { 
-                    name: selectedTeamMemberName.trim(), 
-                    teamId: selectedTeamMemberTeam
-                };
-                break;
-            default:
-                return;
-        }
-        try {
-            const res = await fetch(`/api/${resource}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-
-            if (!res.ok) 
-                throw new Error(await res.text());
-
-            selectedTeamName = "";
-            selectedTeamMemberName = "";
-        } catch (err) {
-            showAlert(`Error adding ${resource}`);
-        }
-    }
 </script>
 
 {#if resource === 'teams' || resource === 'team-members'}
-  <div class="flex flex-wrap items-center gap-2 mb-4">
-    {#if resource === 'teams'}
-        <input
-        type="text"
-        class="custom-input"
-        placeholder="Team name"
-        bind:value={selectedTeamName}
-        />
-    {:else}
-        <select
-        class="custom-select"
-        bind:value={selectedTeamMemberTeam}
-        >
-        <option value="" disabled selected>Select team</option>
-        {#each teams as team}
-            <option value={team.id}>{team.name}</option>
-        {/each}
-        </select>
-    
-        <input
+    <form class="flex flex-row flex-nowrap justify-center items-center gap-2 mb-4 overflow-x-auto"
+        onsubmit={addItem}>
+        {#if resource === 'teams'}
+            <input
             type="text"
             class="custom-input"
-            placeholder="Member name"
-            bind:value={selectedTeamMemberName}
-        />
-    {/if}
+            placeholder="Team name"
+            bind:value={selectedTeamName}
+            />
+        {:else}
+            <select
+            class="custom-select"
+            bind:value={selectedTeamMemberTeam}
+            >
+            <option value="" disabled selected>Select team</option>
+            {#each teams as team}
+                <option value={team.id}>{team.name}</option>
+            {/each}
+            </select>
+        
+            <input
+                type="text"
+                class="custom-input"
+                placeholder="Member name"
+                bind:value={selectedTeamMemberName}
+            />
+        {/if}
 
-    <Button onclick={addItem}>
-        <CirclePlusSolid class="dark:text-gray-400 dark:hover:text-white"/>
-    </Button>
-  </div>
+        <Button onclick={addItem}>
+            <CirclePlusSolid class="dark:text-gray-400 dark:hover:text-white"/>
+        </Button>
+    </form>
 {/if}
 
-
-<div class="flex justify-center md:w-[60%] max-w-screen-l max-h-[80vh] overflow-x-auto overflow-y-auto">
-  <table class="w-auto md:w-full text-center text-xs md:text-base dark:text-gray-400 min-w-full">
-    <thead class="text-xs uppercase">
-      <tr class="dark:bg-gray-600">
-        {#each columns as col}
-            <th>{col}</th>
-        {/each}
-      </tr>
-    </thead>
-    <tbody>
-        {#each data as row}
-        <tr>
-            <td>{row.id}</td>
-            <td>{row.username || row.name}</td>
-            {#if row.role}
-                <td>{row.role}</td>
-            {/if}
-            {#if row.team_id}
-                {#if teams.length}
-                    <td>{teams.find((r: RelatedItem) => r.id === row.team_id)?.name ?? '-'}</td>
-                {/if}
-            {/if}
-            {#if row.team_member_id}
-                {#if teamMembers.length}
-                    <td>{teamMembers.find((r: RelatedItem) => r.id === row.team_member_id)?.name ?? '-'}</td>
-                {/if}
-            {/if}
-            <td>
-                <Button onclick={() => openEdit(row)}><EditSolid /></Button>
-                <Button onclick={() => openDelete(row)}><TrashBinSolid /></Button>
-            </td>
-        </tr>
-        {/each}
-    </tbody>
-  </table>
+<div class="max-h-full overflow-x-auto">
+    <div class="max-h-[500px] overflow-y-auto">
+        <table class="w-auto md:w-full text-center text-xs md:text-base dark:text-gray-800 min-w-full dark:bg-gray-500">
+          <thead class="text-xs uppercase">
+            <tr class="dark:bg-gray-600 dark:text-gray-900">
+              {#each columns as col}
+                  <th>{col}</th>
+              {/each}
+            </tr>
+          </thead>
+          <tbody>
+              {#each data as row}
+              <tr>
+                  <td>{row.id}</td>
+                  <td>{row.username || row.name}</td>
+                  {#if resource === 'users'}
+                      <td>{row.role}</td>
+                  {/if}
+                  {#if (resource === 'users' || resource === 'team-members')}
+                      <td>{teams.find((team: RelatedItem) => team.id === row.team_id)?.name ?? '-'}</td>
+                  {/if}            
+                  {#if (resource === 'users')}
+                      <td>{teamMembers.find((teamMember: RelatedItem) => teamMember.id === row.team_member_id)?.name ?? '-'}</td>
+                  {/if}
+                  <td>
+                      <Button onclick={() => openEdit(row)}><EditSolid /></Button>
+                      <Button onclick={() => openDelete(row)}><TrashBinSolid /></Button>
+                  </td>
+              </tr>
+              {/each}
+          </tbody>
+        </table>
+    </div>
 </div>
 
 <Modal bind:open={editModal} size="xs" class="pt-8 text-center">

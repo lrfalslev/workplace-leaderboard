@@ -18,7 +18,11 @@ export const POST: RequestHandler = async function ({ locals, request, platform 
             .bind(name, teamId)
             .run();
 
-        return json({ success: true });
+        const newTeamMember = await platform?.env.DB
+            .prepare('SELECT * FROM team_members WHERE id = last_insert_rowid()')
+            .first();
+
+        return json(newTeamMember);
     } catch (err) {
         console.error('Failed to insert team member: ', err);
         return new Response('Internal Error', { status: 500 });
@@ -36,8 +40,13 @@ export const PUT: RequestHandler = async function ({ locals, request, platform }
         await platform?.env.DB.prepare('UPDATE team_members SET name = ?, team_id = ? WHERE id = ?')
             .bind(name, teamId, teamMemberId)
             .run();
+            
+        const updatedTeamMember = await platform?.env.DB
+            .prepare('SELECT * FROM team_members WHERE id = ?')
+            .bind(teamMemberId)
+            .first();
 
-        return json({ success: true });
+        return json(updatedTeamMember);
     } catch (err) {
         console.error('Failed to update team member: ', err);
         return new Response('Internal Error', { status: 500 });
