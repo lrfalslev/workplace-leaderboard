@@ -1,19 +1,19 @@
 <script lang="ts">
     import { TableBodyRow, TableBodyCell, Input, Button } from "flowbite-svelte";
     import {  EditSolid } from "flowbite-svelte-icons";
-    import type { Coordinator } from '$lib/types';
+    import type { TeamMember } from '$lib/types';
     import { showAlert } from "$lib/stores/alert";
 
-    export let coordinators: Coordinator[];
+    export let teamMembers: TeamMember[];
     export let topviews: Record<string | number, any>;    
     export let editing = false;
     let formInputs: Record<number, { firstTimeApprovals: number; totalSubmissions: number }> = {};
 
     $: if (editing) {
         formInputs = {};
-        for (const coordinator of coordinators) {
-            const current = topviews[coordinator.id] || { firstTimeApprovals: 0, totalSubmissions: 0 };
-            formInputs[coordinator.id] = {
+        for (const teamMember of teamMembers) {
+            const current = topviews[teamMember.id] || { firstTimeApprovals: 0, totalSubmissions: 0 };
+            formInputs[teamMember.id] = {
                 firstTimeApprovals: current.firstTimeApprovals,
                 totalSubmissions: current.totalSubmissions
             };
@@ -22,7 +22,7 @@
 
     async function submitTopviews() {
         const payload = Object.entries(formInputs).map(([id, metrics]) => ({
-            projectCoordinatorId: Number(id),
+            teamMemberId: Number(id),
             date: topviews.date,
             firstTimeApprovals: metrics.firstTimeApprovals,
             totalSubmissions: metrics.totalSubmissions
@@ -39,7 +39,7 @@
             if (!response.ok) throw new Error("Failed to save");
 
             for (const entry of payload) {
-                const id = entry.projectCoordinatorId;
+                const id = entry.teamMemberId;
                 topviews[id] = {
                     firstTimeApprovals: entry.firstTimeApprovals,
                     totalSubmissions: entry.totalSubmissions
@@ -56,27 +56,27 @@
 <TableBodyRow>
     <TableBodyCell>{topviews.date}</TableBodyCell>
     
-    {#each coordinators as coordinator}
-        {#key coordinator.id}
+    {#each teamMembers as teamMember}
+        {#key teamMember.id}
             <TableBodyCell class="text-gray-400">
                 {#if editing}
                     <Input
-                        bind:value={formInputs[coordinator.id].firstTimeApprovals}
+                        bind:value={formInputs[teamMember.id].firstTimeApprovals}
                         placeholder="accepted"
                         title="First Sumbission Accepted" 
                         size="sm"
                         class="mb-1"
                     />
                     <Input
-                        bind:value={formInputs[coordinator.id].totalSubmissions}
+                        bind:value={formInputs[teamMember.id].totalSubmissions}
                         placeholder="total"
                         title="Total Topviews Submitted" 
                         size="sm"
                         class="mt-1"
                     />
                 {:else}
-                    {#if topviews[coordinator.id] && topviews[coordinator.id].totalSubmissions != 0}
-                        {topviews[coordinator.id].firstTimeApprovals}/{topviews[coordinator.id].totalSubmissions}
+                    {#if topviews[teamMember.id] && topviews[teamMember.id].totalSubmissions != 0}
+                        {topviews[teamMember.id].firstTimeApprovals}/{topviews[teamMember.id].totalSubmissions}
                     {:else}
                         —
                     {/if}

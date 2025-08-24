@@ -16,8 +16,8 @@ CREATE TABLE IF NOT EXISTS users (
     password TEXT NOT NULL,
     role TEXT DEFAULT 'user' CHECK(role IN ('user', 'admin', 'manager')),
     team_id INTEGER,
-    FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE SET NULL,
     team_member_id INTEGER DEFAULT NULL,
+    FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE SET NULL,
     FOREIGN KEY (team_member_id) REFERENCES team_members(id) ON DELETE SET NULL
 );
 

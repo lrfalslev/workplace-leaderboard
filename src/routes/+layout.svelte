@@ -90,8 +90,8 @@
 				<span class="hidden sm:inline">Leaderboard</span>
 				<span class="inline sm:hidden">Home</span>
 			</Button>
+			<Button href="/tickets" class="py-1 m-0 mt-1" color="alternative">Tickets</Button>
 			<Button href="/admin" class="py-1 m-0 mt-1" color="alternative">Admin</Button>
-			<Button href="/admin/users" class="py-1 m-0 mt-1" color="alternative">Users</Button>
 			<Button class="py-1 m-0 mt-1 mr-1" color="alternative" onclick={handleLogout}>Logout</Button>
 		</nav>
 	{:else if $user}

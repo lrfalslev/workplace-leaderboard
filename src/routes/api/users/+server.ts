@@ -7,7 +7,7 @@ export const GET: RequestHandler = async function ({ locals, platform }) {
         return json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const queryResult = await platform?.env.DB.prepare('SELECT id, username, role, projectCoordinatorId FROM users').all();
+    const queryResult = await platform?.env.DB.prepare('SELECT id, username, role, team_id, team_member_id FROM users').all();
     return json(queryResult?.results);
 };
 
@@ -36,16 +36,19 @@ export const PUT: RequestHandler = async function ({ locals, request, platform }
         return json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id, role, coordinator } = await request.json() as { 
-        id: number, 
-        role: string, 
-        coordinator: number | null 
+    const { id, role, teamId, teamMemberId } = await request.json() as { 
+        id: number,
+        role: string,
+        teamId: number | null,
+        teamMemberId: number | null
     };
 
     try {
         await platform?.env.DB
-            .prepare('UPDATE users SET role = ?, projectCoordinatorId = ? WHERE id = ?')
-            .bind(role, coordinator, id)
+            .prepare(`UPDATE users 
+                        SET role = ?, teamId = ?, team_member_id = ? 
+                        WHERE id = ?`)
+            .bind(role, teamId, teamMemberId)
             .run();
 
         return json({ success: true });

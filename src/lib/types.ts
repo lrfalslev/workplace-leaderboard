@@ -1,23 +1,31 @@
 export enum UserRole {
     User = 'user',
     Admin = 'admin',
+    Manager = 'manager'
+}
+
+export type Team = {
+    id: number;
+    name: string;
+}
+
+export type TeamMember = {
+    id: number;
+    name: string;
+    teamMemberId: number;
 }
 
 export type User = {
     id: number;
     username: string;
-    role: UserRole,
-    projectCoordinatorId: number | null
+    role: UserRole;
+    teamId: number | null;
+    teamMemberId: number | null;
 };
 
-export interface Topview {
+export type Topview = {
     date: string;
-    coordinatorId: number;
     firstTimeApprovals: number;
     totalSubmissions: number;
-}
-
-export interface Coordinator {
-    id: number;
-    name: string;
+    teamMemberId: number;
 }

@@ -7,14 +7,14 @@
     import { UserRole } from '$lib/types';
 
     interface SummaryRow {
-        coordinatorId: number;
-        coordinatorName: string;
+        teamMemberId: number;
+        teamMemberName: string;
         totalFirstTimeApprovals: number;
         totalSubmissions: number;
     }
     
-    let coordinatorName: string | null = null;
-    let coordinatorAcceptanceRate: string | null = null;
+    let teamMemberName: string | null = null;
+    let teamMemberAcceptanceRate: string | null = null;
     let summary: SummaryRow[] = [];
     let options: ApexOptions = {
         colors: ["#35bc00", "#BC00A3"],
@@ -80,7 +80,7 @@
 
                 return `
                     <div class="p-2 text-sm bg-white dark:bg-gray-800 dark:text-white rounded shadow">
-                        <strong>${row.coordinatorName} (${percentage}%)</strong><br/>
+                        <strong>${row.teamMemberName} (${percentage}%)</strong><br/>
                         First Time Approvals: ${row.totalFirstTimeApprovals}<br/>
                         Total Submissions: ${row.totalSubmissions}
                     </div>
@@ -106,15 +106,15 @@
     }
 
     function getUsersAcceptanceRate() {
-        const coordinatorRow = summary.find(
-            row => row.coordinatorId === $user?.projectCoordinatorId
+        const teamMemberRow = summary.find(
+            row => row.teamMemberId === $user?.teamMemberId
         );
-        if (coordinatorRow) {
-            const rate = coordinatorRow.totalSubmissions > 0
-                ? (coordinatorRow.totalFirstTimeApprovals / coordinatorRow.totalSubmissions) * 100
+        if (teamMemberRow) {
+            const rate = teamMemberRow.totalSubmissions > 0
+                ? (teamMemberRow.totalFirstTimeApprovals / teamMemberRow.totalSubmissions) * 100
                 : 0;
-            coordinatorAcceptanceRate = rate.toFixed(1);
-            coordinatorName = coordinatorRow.coordinatorName;
+            teamMemberAcceptanceRate = rate.toFixed(1);
+            teamMemberName = teamMemberRow.teamMemberName;
         }
     }
 
@@ -126,10 +126,10 @@
             if (!response.ok || !Array.isArray(json)) 
                 return;
                 
-            summary = json.sort((a, b) => a.coordinatorName.localeCompare(b.coordinatorName));
-            options.xaxis!.categories = summary.map(row => row.coordinatorName);
+            summary = json.sort((a, b) => a.teamMemberName.localeCompare(b.teamMemberName));
+            options.xaxis!.categories = summary.map(row => row.teamMemberName);
 
-            if ($user?.projectCoordinatorId != null)
+            if ($user?.teamMemberId != null)
                 getUsersAcceptanceRate();
 
             const isAdmin = $user?.role === UserRole.Admin;
@@ -145,10 +145,10 @@
     <h2 class="text-xl font-semibold dark:text-white flex my-2 justify-center">
         First Topviews Accepted
     </h2>
-    {#if coordinatorName != null && coordinatorAcceptanceRate != null}
+    {#if teamMemberName != null && teamMemberAcceptanceRate != null}
         <p class="dark:text-white justify-center text-center text-xs md:text-base sm:flex sm:flex-row">
-            <span class="block sm:inline">Nice work, {coordinatorName}!</span>
-            <span class="block sm:inline ml-1">You're at a {coordinatorAcceptanceRate}% acceptance rate and climbing!</span>
+            <span class="block sm:inline">Nice work, {teamMemberName}!</span>
+            <span class="block sm:inline ml-1">You're at a {teamMemberAcceptanceRate}% acceptance rate and climbing!</span>
         </p>
     {/if}
     {#if options.series?.length}

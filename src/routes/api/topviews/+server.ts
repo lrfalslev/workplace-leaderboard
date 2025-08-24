@@ -5,10 +5,10 @@ export const GET: RequestHandler = async function ({ platform }) {
     const queryResult = await platform?.env.DB
         .prepare(`
             SELECT 
-                topviews.date,
-                projectCoordinatorId AS coordinatorId,
-                topviews.firstTimeApprovals,
-                topviews.totalSubmissions
+                date,
+                first_time_approvals,
+                total_submissions,
+                team_member_id
             FROM topviews
         `)
         .all();
@@ -21,10 +21,10 @@ export const POST: RequestHandler = async function ({ locals, request, platform 
     }
 
     const topviews = await request.json() as {
-        projectCoordinatorId: number;
         date: string;
         firstTimeApprovals: number;
         totalSubmissions: number;
+        teamMemberId: number;
     }[];
 
     try {
@@ -34,13 +34,13 @@ export const POST: RequestHandler = async function ({ locals, request, platform 
             const formattedDate = new Date(topview.date).toISOString().split('T')[0];
 
             await db?.prepare(`
-                INSERT INTO topviews (projectCoordinatorId, date, firstTimeApprovals, totalSubmissions)
+                INSERT INTO topviews (date, first_time_approvals, total_submissions, team_member_id)
                 VALUES (?, ?, ?, ?)
-                ON CONFLICT(projectCoordinatorId, date) DO UPDATE SET
+                ON CONFLICT(date, team_member_id) DO UPDATE SET
                     firstTimeApprovals = excluded.firstTimeApprovals,
                     totalSubmissions = excluded.totalSubmissions
             `)
-            .bind(topview.projectCoordinatorId, formattedDate, topview.firstTimeApprovals, topview.totalSubmissions)
+            .bind(formattedDate, topview.firstTimeApprovals, topview.totalSubmissions, topview.teamMemberId)
             .run();
         }
 
