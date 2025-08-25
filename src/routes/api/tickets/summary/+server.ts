@@ -10,7 +10,7 @@ export const GET: RequestHandler = async function ({ platform }) {
                 teams.name AS teamName,
                 SUM(COALESCE(work_items.tickets_awarded, 0)) + SUM(COALESCE(bonus_tickets.tickets_awarded, 0)) AS totalTickets,
                 SUM(work_items.tickets_awarded) AS totalWorkItemTickets,
-                SUM(work_items.total_work_items) AS totalWorkItems
+                SUM(work_items.work_items) AS totalWorkItems
             FROM team_members
             LEFT JOIN work_items ON work_items.team_member_id = team_members.id
             LEFT JOIN teams ON team_members.team_id = teams.id

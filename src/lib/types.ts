@@ -40,10 +40,11 @@ export type User = {
     teamMemberId: number | null;
 };
 
-export type Topview = {
+export type WorkItem = {
+    id: number;
     date: string;
-    firstTimeApprovals: number;
-    totalSubmissions: number;
+    ticketsAwarded: number;
+    workItems: number;
     teamMemberId: number;
 }
 

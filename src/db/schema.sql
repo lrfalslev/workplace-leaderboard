@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS work_items (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     date DATE NOT NULL,
     tickets_awarded INTEGER NOT NULL,    
-    total_work_items INTEGER,
+    work_items INTEGER,
     team_member_id INTEGER NOT NULL,
     FOREIGN KEY (team_member_id) REFERENCES team_members(id) ON DELETE CASCADE,
     UNIQUE(team_member_id, date)

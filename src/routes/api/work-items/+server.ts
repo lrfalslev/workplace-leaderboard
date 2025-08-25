@@ -5,10 +5,11 @@ export const GET: RequestHandler = async function ({ platform }) {
     const queryResult = await platform?.env.DB
         .prepare(`
             SELECT 
+                id,
                 date,
-                tickets_awarded,
-                total_work_items,
-                team_member_id
+                tickets_awarded AS ticketsAwarded,
+                work_items AS workItems,
+                team_member_id AS teamMemberId
             FROM work_items
         `)
         .all();
@@ -34,11 +35,11 @@ export const POST: RequestHandler = async function ({ locals, request, platform 
             const formattedDate = new Date(topview.date).toISOString().split('T')[0];
 
             await db?.prepare(`
-                INSERT INTO work_items (date, tickets_awarded, total_work_items, team_member_id)
+                INSERT INTO work_items (date, tickets_awarded, work_items, team_member_id)
                 VALUES (?, ?, ?, ?)
                 ON CONFLICT(date, team_member_id) DO UPDATE SET
                     tickets_awarded = excluded.tickets_awarded,
-                    total_work_items = excluded.total_work_items
+                    work_items = excluded.work_items
             `)
             .bind(formattedDate, topview.ticketsAwarded, topview.totalWorkItems, topview.teamMemberId)
             .run();
@@ -64,7 +65,7 @@ export const DELETE: RequestHandler = async function ({ locals, request, platfor
 
     try {
         const placeholders = ticketIds.map(() => '?').join(', ');
-        const result = await platform?.env.DB.prepare('DELETE FROM work_items WHERE id IN (${placeholders})')
+        const result = await platform?.env.DB.prepare(`DELETE FROM work_items WHERE id IN (${placeholders})`)
             .bind(...ticketIds)
             .run();
 
