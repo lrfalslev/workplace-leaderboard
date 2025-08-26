@@ -47,7 +47,6 @@
                         workItemsArray.push(dayEntry);
                     }
 
-                    // push ID for later deletion reference
                     dayEntry.ids = dayEntry.ids || [];
                     dayEntry.ids.push(workItem.id);
                     

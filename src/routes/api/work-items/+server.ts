@@ -24,7 +24,7 @@ export const POST: RequestHandler = async function ({ locals, request, platform 
     const topviews = await request.json() as {
         date: string;
         ticketsAwarded: number;
-        totalWorkItems: number;
+        workItems: number;
         teamMemberId: number;
     }[];
 
@@ -41,7 +41,7 @@ export const POST: RequestHandler = async function ({ locals, request, platform 
                     tickets_awarded = excluded.tickets_awarded,
                     work_items = excluded.work_items
             `)
-            .bind(formattedDate, topview.ticketsAwarded, topview.totalWorkItems, topview.teamMemberId)
+            .bind(formattedDate, topview.ticketsAwarded, topview.workItems, topview.teamMemberId)
             .run();
         }
 

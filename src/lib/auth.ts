@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import type { User, UserRole } from './types';
+import 'dotenv/config';
 
 //Passwords
 const saltRounds = 10;
