@@ -2,7 +2,15 @@ import { UserRole } from '$lib/types';
 import { json, type RequestHandler } from '@sveltejs/kit';
 
 export const GET: RequestHandler = async function ({ platform }) {
-    const queryResult = await platform?.env.DB.prepare('SELECT * FROM team_members').all();
+    const queryResult = await platform?.env.DB
+        .prepare(`
+            SELECT 
+                id,
+                name,
+                team_id AS teamId
+            FROM team_members
+        `)
+        .all();
     return json(queryResult?.results);
 };
 

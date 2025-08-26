@@ -7,7 +7,17 @@ export const GET: RequestHandler = async function ({ locals, platform }) {
         return json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const queryResult = await platform?.env.DB.prepare('SELECT id, username, role, team_id, team_member_id FROM users').all();
+    const queryResult = await platform?.env.DB
+        .prepare(`
+            SELECT 
+                id,
+                username,
+                role,
+                team_id AS teamId,
+                team_member_id AS teamMemberId
+            FROM users
+        `)
+        .all();
     return json(queryResult?.results);
 };
 
@@ -26,7 +36,15 @@ export const POST: RequestHandler = async function ({ request, platform }) {
             .run();
             
         const newUser = await platform?.env.DB
-            .prepare('SELECT * FROM users WHERE id = last_insert_rowid()')
+            .prepare(`
+                SELECT 
+                    id,
+                    username,
+                    role,
+                    team_id AS teamId,
+                    team_member_id AS teamMemberId 
+                FROM users 
+                WHERE id = last_insert_rowid()`)
             .first();
 
         return json(newUser);
@@ -57,7 +75,15 @@ export const PUT: RequestHandler = async function ({ locals, request, platform }
             .run();
             
         const updatedUser = await platform?.env.DB
-            .prepare('SELECT * FROM users WHERE id = ?')
+            .prepare(`
+                SELECT 
+                    id,
+                    username,
+                    role,
+                    team_id AS teamId,
+                    team_member_id AS teamMemberId 
+                FROM users 
+                WHERE id = ?`)
             .bind(userId)
             .first();
 

@@ -3,18 +3,34 @@
     import { Table, TableBody, TableHead, TableHeadCell, Button, Input, Modal, Popover } from "flowbite-svelte";
     import {  TrashBinSolid } from "flowbite-svelte-icons";
     import EditableRow from "./components/EditableRow.svelte";
-    import type { WorkItem, TeamMember } from '$lib/types';
+    import type { WorkItem, TeamMember, Team } from '$lib/types';
     import { showAlert } from "$lib/stores/alert";
     
     let date = $state(new Date().toLocaleDateString('en-CA'));
     
     let deleteTopviewModal = $state(false);
-    let selectedTeamMember: TeamMember | null = null;
     let selectedDate: string | null = $state(null);
     let selectedIds: number[] = $state([]);
+    let selectedTeamId = $state<number | null>(null);
 
+    let teams: Team[] = $state([]);
     let teamMembers: TeamMember[] = $state([]);
     let workItemsArray: Array<Record<string | number, any>> = $state([]);
+
+    async function fetchTeams() {
+        try {
+            const response = await fetch('/api/teams');
+            const data = await response.json();
+
+            if (response.ok && Array.isArray(data)) {
+                teams = data;
+            } else {
+                console.error('Unexpected response format: ', data);
+            }
+        } catch (err) {
+            console.error('Failed to fetch topviews: ', err);
+        }
+    }
 
     async function fetchTeamMembers() {
         try {
@@ -86,6 +102,19 @@
             showAlert('Could not delete work items. Please try again.');
         }
     }
+    
+    const filteredMembers = $derived(() => 
+        teamMembers.filter(tm => tm.teamId === selectedTeamId)
+    );
+    const filteredWorkItems = $derived(() => 
+        workItemsArray.map(entry => {
+        const filteredEntry = { ...entry };
+            filteredEntry.teamData = filteredMembers().map(member => ({
+                member,
+                data: entry[member.id]
+        }));
+        return filteredEntry;
+    }));
 
     function addNewRow() {
         let dayEntry = workItemsArray.find(entry => entry.date === date);
@@ -97,12 +126,26 @@
     }
 
     onMount(() => {
+        fetchTeams();
         fetchTeamMembers();
         fetchWorkItems();
+        if (teams.length) {
+            selectedTeamId = teams[0].id;
+        }
     });
 </script>
 
 <div class="max-h-[80vh] overflow-y-auto  w-[80vw] max-w-full table-fixed mx-auto">
+    <div class="flex gap-2 mb-4">
+        {#each teams as team}
+            <Button
+                color={selectedTeamId === team.id ? 'primary' : 'alternative'}
+                onclick={() => selectedTeamId = team.id}
+            >
+                {team.name}
+            </Button>
+        {/each}
+    </div>
     <div class="flex items-center sticky top-0 z-30 mb-2 bg-gray-700">
         <div class="flex gap-2 w-1/2 m-2">
             <Input bind:value={date} type="date" class="flex-1" onkeydown={(e) => e.key === 'Enter' && addNewRow()}/>
@@ -112,7 +155,7 @@
     <Table class="text-center w-full">
         <TableHead>
             <TableHeadCell>Date</TableHeadCell>
-            {#each teamMembers as teamMember}
+            {#each filteredMembers() as teamMember}
             <TableHeadCell class="group relative">
                 <div class="flex justify-center gap-2">
                     {teamMember.name}
@@ -124,8 +167,8 @@
             </TableHeadCell>
         </TableHead>
         <TableBody>
-            {#each workItemsArray as workItems}
-                <EditableRow {teamMembers} {workItems}>
+            {#each filteredWorkItems() as workItems}
+                <EditableRow teamMembers={filteredMembers()} {workItems}>
                     <button
                         slot="actions"
                         onclick={() => {
@@ -147,7 +190,6 @@
         deleteTopviewModal = false;
     } else if (action === 'decline') {
         deleteTopviewModal = false;
-        selectedTeamMember = null;
     }
     }}>
     <p>

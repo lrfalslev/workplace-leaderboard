@@ -29,7 +29,7 @@ export type Team = {
 export type TeamMember = {
     id: number;
     name: string;
-    teamMemberId: number;
+    teamId: number;
 }
 
 export type User = {

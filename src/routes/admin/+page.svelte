@@ -92,11 +92,16 @@
     }
     
     function sortTeams(list: Team[]): Team[] {
-      return list.slice().sort((a, b) => a.name.localeCompare(b.name));
+      return list.slice().sort();
     }
 
     function sortTeamMembers(list: TeamMember[]): TeamMember[] {
-      return list.slice().sort((a, b) => a.name.localeCompare(b.name));
+      return list.slice().sort((a, b) => {
+        if (a.teamId !== b.teamId) {
+          return a.teamId - b.teamId; // Sort by teamId first
+        }
+        return a.name.localeCompare(b.name); // Then by name alphabetically
+      });
     }
 
     function sortUsers(list: User[]): User[] {

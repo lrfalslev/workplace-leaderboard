@@ -146,14 +146,14 @@
                 payload = { 
                     teamMemberId: selected.id, 
                     name: selectedName.trim(), 
-                    teamId: selected.team_id ?? null 
+                    teamId: selected.teamId ?? null 
                 };
                 break;
             case 'users':
                 payload = { 
                     userId: selected.id, 
                     role: selectedRole, 
-                    teamId: selected.team_id ?? null, 
+                    teamId: selected.teamId ?? null, 
                     teamMemberId: selectedTeamMember ?? null 
                 };
                 break;
@@ -229,7 +229,7 @@
                       <td>{UserRoleLabels[row.role as keyof typeof UserRoleLabels] ?? '-'}</td>
                   {/if}
                   {#if (resource === 'users' || resource === 'team-members')}
-                      <td>{teams.find((team: RelatedItem) => team.id === row.team_id)?.name ?? '-'}</td>
+                      <td>{teams.find((team: RelatedItem) => team.id === row.teamId)?.name ?? '-'}</td>
                   {/if}            
                   {#if (resource === 'users')}
                       <td>{teamMembers.find((teamMember: RelatedItem) => teamMember.id === row.team_member_id)?.name ?? '-'}</td>
