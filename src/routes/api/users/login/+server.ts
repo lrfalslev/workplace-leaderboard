@@ -7,8 +7,8 @@ type DBUserRow = {
   username: string; 
   password: string;
   role: string;
-  teamId: number;
-  teamMemberId: number;
+  team_id: number;
+  team_member_id: number;
 };
 
 export const POST: RequestHandler = async ({ request, platform, cookies }) => {

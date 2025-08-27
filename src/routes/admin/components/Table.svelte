@@ -51,8 +51,8 @@
         selectedName = row.name ?? row.username ?? '';
         selectedRole = row.role ?? '';
         selectedType = row.type ?? '';
-        selectedTeam = row.team_id ?? null;
-        selectedTeamMember = row.team_member_id ?? null;
+        selectedTeam = row.teamId ?? null;
+        selectedTeamMember = row.teamMemberId ?? null;
         editModal = true;
     }
     function openDelete(row: any) { selected = row; deleteModal = true; }
@@ -77,13 +77,9 @@
                     return;
                 }
                 const teamId = Number(selectedTeamMemberTeam);
-                if (!teamId) {
-                    showAlert('Team is required.');
-                    return;
-                }
                 payload = { 
                     name: selectedTeamMemberName.trim(), 
-                    teamId: teamId
+                    teamId: teamId || null, 
                 };
                 break;
             default:
@@ -146,15 +142,15 @@
                 payload = { 
                     teamMemberId: selected.id, 
                     name: selectedName.trim(), 
-                    teamId: selected.teamId ?? null 
+                    teamId: selectedTeam || null 
                 };
                 break;
             case 'users':
                 payload = { 
                     userId: selected.id, 
                     role: selectedRole, 
-                    teamId: selected.teamId ?? null, 
-                    teamMemberId: selectedTeamMember ?? null 
+                    teamId: selectedTeam || null, 
+                    teamMemberId: selectedTeamMember || null 
                 };
                 break;
             default:
@@ -188,17 +184,16 @@
             <input type="text" class="custom-input" placeholder="Team Name" bind:value={selectedTeamName} />
             
             <select bind:value={selectedTeamType} class="custom-select">
-            <option value="" disabled>Team Type</option>
             {#each Object.values(TeamType) as teamType}
                 <option value={teamType}>{TeamTypeLabels[teamType]}</option>
             {/each}
             </select>
         {:else}
             <select bind:value={selectedTeamMemberTeam} class="custom-select">
-            <option value="" disabled selected>Team</option>
-            {#each teams as team}
-                <option value={team.id}>{team.name}</option>
-            {/each}
+                <option value="">No Team</option>
+                {#each teams as team}
+                    <option value={team.id}>{team.name}</option>
+                {/each}
             </select>
         
             <input type="text" class="custom-input" placeholder="Member Name" bind:value={selectedTeamMemberName} />
@@ -231,7 +226,7 @@
                       <td>{teams.find((team: RelatedItem) => team.id === row.teamId)?.name ?? '-'}</td>
                   {/if}            
                   {#if (resource === 'users')}
-                      <td>{teamMembers.find((teamMember: RelatedItem) => teamMember.id === row.team_member_id)?.name ?? '-'}</td>
+                      <td>{teamMembers.find((teamMember: RelatedItem) => teamMember.id === row.teamMemberId)?.name ?? '-'}</td>
                   {/if}        
                   {#if (resource === 'teams')}
                       <td>{TeamTypeLabels[row.type as keyof typeof TeamTypeLabels] ?? '-'}</td>
@@ -260,7 +255,7 @@
         </select>
 
         <select bind:value={selectedTeamMember} class="custom-select">
-        <option value="" disabled>Linked Team Member</option>
+        <option value="">No Team Member</option>
         {#each teamMembers as member}
             <option value={member.id}>{member.name}</option>
         {/each}
@@ -268,7 +263,7 @@
 
         {#if selectedRole === 'manager'}
             <select bind:value={selectedTeam} class="custom-select">
-                <option value="" disabled>Managed Team</option>
+                <option value="">No Team</option>
                 {#each teams as team}
                     <option value={team.id}>{team.name}</option>
                 {/each}
@@ -278,7 +273,6 @@
         <input type="text" bind:value={selectedName} placeholder="Name" class="custom-input" />
         
         <select bind:value={selectedType} class="custom-select">
-        <option value="" disabled>Team Type</option>
         {#each Object.values(TeamType) as teamType}
             <option value={teamType}>{TeamTypeLabels[teamType]}</option>
         {/each}
@@ -287,10 +281,10 @@
         <input type="text" bind:value={selectedName} placeholder="Name" class="custom-input" />
 
         <select bind:value={selectedTeam} class="custom-select">
-        <option value="" disabled>Managed Team</option>
-        {#each teams as team}
-            <option value={team.id}>{team.name}</option>
-        {/each}
+            <option value="">No Team</option>
+            {#each teams as team}
+                <option value={team.id}>{team.name}</option>
+            {/each}
         </select>
     {/if}
     <div class="flex justify-center gap-2">

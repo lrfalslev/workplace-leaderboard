@@ -3,7 +3,6 @@
     import Table from './components/Table.svelte';
     import type { Team, TeamMember, User } from '$lib/types';
 
-    // let users: User[] = $state([]);
     let teams: Team[] = $state([]);
     let teamMembers: TeamMember[] = $state([]);
     let users: User[] = $state([]);
@@ -47,6 +46,7 @@
         try {
             const response = await fetch('/api/users');
             const data = await response.json();
+
             if (response.ok && Array.isArray(data)) {
                 users = sortUsers(data);
             } else {
