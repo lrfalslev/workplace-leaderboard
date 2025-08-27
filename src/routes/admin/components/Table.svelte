@@ -200,22 +200,22 @@
         {/if}
 
         <Button onclick={addItem}>
-            <CirclePlusSolid class="dark:text-gray-400 dark:hover:text-white"/>
+            <CirclePlusSolid class="dark:text-white"/>
         </Button>
     </form>
 {/if}
 
 <div class="max-h-full overflow-x-auto">
     <div class="max-h-[500px] overflow-y-auto">
-        <table class="w-auto md:w-full text-center text-xs md:text-base dark:text-gray-800 min-w-full dark:bg-gray-500">
+        <table class="w-auto md:w-full text-center text-xs md:text-base dark:text-gray-800 min-w-full border dark:border-gray-700">
           <thead class="text-xs uppercase">
-            <tr class="dark:bg-gray-600 dark:text-gray-900">
+            <tr class="dark:text-gray-400">
               {#each columns as col}
                   <th>{col}</th>
               {/each}
             </tr>
           </thead>
-          <tbody>
+          <tbody class="dark:text-gray-400">
               {#each data as row}
               <tr>
                   <td>{row.username || row.name}</td>
@@ -232,8 +232,12 @@
                       <td>{TeamTypeLabels[row.type as keyof typeof TeamTypeLabels] ?? '-'}</td>
                   {/if}
                   <td>
-                      <Button onclick={() => openEdit(row)}><EditSolid /></Button>
-                      <Button onclick={() => openDelete(row)}><TrashBinSolid /></Button>
+                    <button onclick={() => openEdit(row)}>
+                        <EditSolid class="dark:text-gray-400 dark:hover:text-white"/>
+                    </button>
+                    <button onclick={() => openDelete(row)}>
+                        <TrashBinSolid class="dark:text-gray-400 dark:hover:text-white"/>
+                    </button>
                   </td>
               </tr>
               {/each}
@@ -328,8 +332,14 @@
     white-space: nowrap;
   }
 
+  td {
+    padding: 0.5rem;
+    white-space: nowrap;
+    border: 1px solid #364153; /* Tailwind's gray-600 */
+    }
+
   th {
-    background-color: #4B5563; /* Tailwind's bg-gray-700 */
+    background-color: #364153; /* Tailwind's bg-gray-700 */
     position: sticky;
     top: 0;
     z-index: 10;

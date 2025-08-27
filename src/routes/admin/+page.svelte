@@ -115,8 +115,8 @@
     });
 </script>
 
-<section class="m-4">
-  <h2 class="text-xl font-bold mb-4 text-center">Users</h2>
+<section class="m-2 p-4 bg-gray-800 rounded-lg shadow-md">
+  <h2 class="text-xl font-bold mb-4 dark:text-gray-200 text-center">Users</h2>
   <Table
     columns={userColumns}
     data={users}
@@ -129,8 +129,8 @@
   />
 </section>
 
-<section class="m-4">
-  <h2 class="text-xl font-bold mb-4 text-center">Teams</h2>
+<section class="m-2 p-4 bg-gray-800 rounded-lg shadow-md">
+  <h2 class="text-xl font-bold mb-4 dark:text-gray-200 text-center">Teams</h2>
   <Table
     columns={teamColumns}
     data={teams}
@@ -141,8 +141,8 @@
   />
 </section>
 
-<section class="m-4">
-  <h2 class="text-xl font-bold mb-4 text-center">Team Members</h2>
+<section class="m-2 p-4 bg-gray-800 rounded-lg shadow-md">
+  <h2 class="text-xl font-bold mb-4 dark:text-gray-200 text-center">Team Members</h2>
   <Table
     columns={teamMemberColumns}
     data={teamMembers}

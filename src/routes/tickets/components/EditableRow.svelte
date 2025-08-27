@@ -58,7 +58,7 @@
     
     {#each teamMembers as teamMember}
         {#key teamMember.id}
-            <TableBodyCell class="text-gray-400 border border-gray-200 dark:border-gray-700">
+            <TableBodyCell class="text-gray-400 border dark:border-gray-700">
                 {#if editing}
                     <Input
                         bind:value={formInputs[teamMember.id].ticketsAwarded}
