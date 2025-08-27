@@ -107,7 +107,13 @@
             if (!response.ok || !Array.isArray(json)) 
                 return;
                 
-            summary = json.sort((a, b) => a.teamMemberName.localeCompare(b.teamMemberName));
+            summary = json.sort((a, b) => {
+                if (a.teamId !== b.teamId) {
+                return a.teamId - b.teamId;
+                }
+                return a.teamMemberName.localeCompare(b.teamMemberName);
+            });
+            
             options.xaxis!.categories = summary.map(row => row.teamMemberName);
 
             const workItemTickets = summary.map(m => m.totalWorkItemTickets || 0);

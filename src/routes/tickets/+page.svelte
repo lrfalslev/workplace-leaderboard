@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import { Table, TableBody, TableHead, TableHeadCell, Button, Input, Modal, Popover } from "flowbite-svelte";
+    import { Table, TableBody, TableHead, TableHeadCell, Button, Input, Modal, Popover, Tabs, TabItem, Card } from "flowbite-svelte";
     import {  TrashBinSolid } from "flowbite-svelte-icons";
     import EditableRow from "./components/EditableRow.svelte";
     import type { WorkItem, TeamMember, Team } from '$lib/types';
@@ -24,6 +24,9 @@
 
             if (response.ok && Array.isArray(data)) {
                 teams = data;
+                if (teams.length) {
+                    selectedTeamId = teams[0].id;
+                }
             } else {
                 console.error('Unexpected response format: ', data);
             }
@@ -106,6 +109,7 @@
     const filteredMembers = $derived(() => 
         teamMembers.filter(tm => tm.teamId === selectedTeamId)
     );
+
     const filteredWorkItems = $derived(() => 
         workItemsArray.map(entry => {
         const filteredEntry = { ...entry };
@@ -129,13 +133,10 @@
         fetchTeams();
         fetchTeamMembers();
         fetchWorkItems();
-        if (teams.length) {
-            selectedTeamId = teams[0].id;
-        }
     });
 </script>
 
-<div class="max-h-[80vh] overflow-y-auto  w-[80vw] max-w-full table-fixed mx-auto">
+<div class="max-w-full">
     <div class="flex gap-2 mb-4">
         {#each teams as team}
             <Button
@@ -146,43 +147,47 @@
             </Button>
         {/each}
     </div>
-    <div class="flex items-center sticky top-0 z-30 mb-2 bg-gray-700">
-        <div class="flex gap-2 w-1/2 m-2">
-            <Input bind:value={date} type="date" class="flex-1" onkeydown={(e) => e.key === 'Enter' && addNewRow()}/>
-            <Button onclick={addNewRow}>Add Date</Button>
-        </div>
-    </div>
-    <Table class="text-center w-full">
-        <TableHead>
-            <TableHeadCell>Date</TableHeadCell>
-            {#each filteredMembers() as teamMember}
-            <TableHeadCell class="group relative">
-                <div class="flex justify-center gap-2">
-                    {teamMember.name}
+    <div class="max-h-[80vh] overflow-y-auto  w-[80vw] max-w-full table-fixed mx-auto">
+        <Card class="max-w-[100%] p-8">
+            <div class="flex items-center sticky top-0 z-30 mb-2">
+                <div class="flex gap-2 w-1/2 m-2">
+                    <Input bind:value={date} type="date" class="flex-1" onkeydown={(e) => e.key === 'Enter' && addNewRow()}/>
+                    <Button onclick={addNewRow}>Add Date</Button>
                 </div>
-            </TableHeadCell>
-            {/each} 
-            <TableHeadCell> 
-                <span class="sr-only">Edit</span> 
-            </TableHeadCell>
-        </TableHead>
-        <TableBody>
-            {#each filteredWorkItems() as workItems}
-                <EditableRow teamMembers={filteredMembers()} {workItems}>
-                    <button
-                        slot="actions"
-                        onclick={() => {
-                            selectedDate = workItems.date;
-                            selectedIds = workItems.ids;
-                            deleteTopviewModal = true;
-                        }}
-                    >
-                        <TrashBinSolid class="dark:text-gray-400 dark:hover:text-red-800" />
-                    </button>
-                </EditableRow>
-            {/each}
-        </TableBody>
-    </Table>
+            </div>
+            <Table class="text-center w-full table-fixed border dark:border-gray-700">
+                <TableHead>
+                    <TableHeadCell>Date</TableHeadCell>
+                    {#each filteredMembers() as teamMember}
+                    <TableHeadCell class="group relative">
+                        <div class="flex justify-center gap-2">
+                            {teamMember.name}
+                        </div>
+                    </TableHeadCell>
+                    {/each} 
+                    <TableHeadCell> 
+                        <span class="sr-only">Edit</span> 
+                    </TableHeadCell>
+                </TableHead>
+                <TableBody>
+                    {#each filteredWorkItems() as workItems}
+                        <EditableRow teamMembers={filteredMembers()} {workItems}>
+                            <button
+                                slot="actions"
+                                onclick={() => {
+                                    selectedDate = workItems.date;
+                                    selectedIds = workItems.ids;
+                                    deleteTopviewModal = true;
+                                }}
+                            >
+                                <TrashBinSolid class="dark:text-gray-400 dark:hover:text-red-800" />
+                            </button>
+                        </EditableRow>
+                    {/each}
+                </TableBody>
+            </Table>
+        </Card>
+    </div>
 </div>
 <Modal form bind:open={deleteTopviewModal} size="xs" class="pt-8 text-center" onaction={async ({ action }) => {
     if (action === 'success' && selectedIds?.length) {
