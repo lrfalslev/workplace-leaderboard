@@ -9,9 +9,9 @@
     let users: User[] = $state([]);
 
     // column definitions
-    const teamColumns = ['Id', 'Team Name', 'Type', 'Edit'];
-    const teamMemberColumns = ['Id', 'Name', 'Team', 'Edit'];
-    const userColumns = ['Id', 'Username', 'Role', 'Team', 'Team Member', 'Edit'];
+    const teamColumns = ['Team Name', 'Type', 'Edit'];
+    const teamMemberColumns = ['Name', 'Team', 'Edit'];
+    const userColumns = ['Username', 'Role', 'Team', 'Team Member', 'Edit'];
 
     async function fetchTeams() {
         try {

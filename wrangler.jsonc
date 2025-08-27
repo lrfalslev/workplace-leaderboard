@@ -4,7 +4,7 @@
  */
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "topview-leaderboard",
+	"name": "workplace-leaderboard",
 	"main": ".svelte-kit/cloudflare/_worker.js",
 	"compatibility_date": "2025-08-17",
   	"compatibility_flags": ["nodejs_compat"],
@@ -29,9 +29,9 @@
 	 */
 	 "d1_databases": [
 		{
-		"binding": "DB",
-		"database_name": "topviews",
-		"database_id": "b0d0e50e-4d1b-4358-9de3-e092f9cb3b67"
+			"binding": "DB",
+			"database_name": "workplace_leaderboard",
+			"database_id": "0f0a90f6-d3d8-4621-9341-ca73ae34cbf6"
 		}
 	]
 

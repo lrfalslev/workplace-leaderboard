@@ -223,7 +223,6 @@
           <tbody>
               {#each data as row}
               <tr>
-                  <td>{row.id}</td>
                   <td>{row.username || row.name}</td>
                   {#if resource === 'users'}
                       <td>{UserRoleLabels[row.role as keyof typeof UserRoleLabels] ?? '-'}</td>

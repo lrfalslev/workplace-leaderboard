@@ -54,7 +54,7 @@
 </script>
 
 <TableBodyRow>
-    <TableBodyCell>{workItems.date}</TableBodyCell>
+    <TableBodyCell class="text-sm p-4">{workItems.date}</TableBodyCell>
     
     {#each teamMembers as teamMember}
         {#key teamMember.id}
@@ -67,19 +67,17 @@
                         size="sm"
                         class="mb-1"
                     />
-                    {#if teamMember.id !== 2} <!--if not on a team of type tickets_and_totals-->
-                        <Input
-                            bind:value={formInputs[teamMember.id].workItems}
-                            placeholder="total"
-                            title="Total Work Items Submitted" 
-                            size="sm"
-                            class="mt-1"
-                        />
-                    {/if}
+                    <Input
+                        bind:value={formInputs[teamMember.id].workItems}
+                        placeholder="total"
+                        title="Total Work Items Submitted" 
+                        size="sm"
+                        class="mt-1"
+                    />
                 {:else}
                     {#if workItems[teamMember.id] && workItems[teamMember.id].workItems === null}
                         {workItems[teamMember.id].ticketsAwarded}
-                    {:else if workItems[teamMember.id] && workItems[teamMember.id].ticketsAwarded != 0}
+                    {:else if workItems[teamMember.id] && workItems[teamMember.id].workItems != 0}
                         {workItems[teamMember.id].ticketsAwarded}/{workItems[teamMember.id].workItems}
                     {:else}
                         —
