@@ -3,11 +3,21 @@ import { hashPassword } from '$lib/auth';
 import { UserRole } from '$lib/types';
 
 export const GET: RequestHandler = async function ({ locals, platform }) {
-    if (!locals.user || locals.user.role !== UserRole.Admin) {
+    if (!locals.user || locals.user.role !== UserRole.ADMIN) {
         return json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const queryResult = await platform?.env.DB.prepare('SELECT id, username, role, projectCoordinatorId FROM users').all();
+    const queryResult = await platform?.env.DB
+        .prepare(`
+            SELECT 
+                id,
+                username,
+                role,
+                team_id AS teamId,
+                team_member_id AS teamMemberId
+            FROM users
+        `)
+        .all();
     return json(queryResult?.results);
 };
 
@@ -24,7 +34,20 @@ export const POST: RequestHandler = async function ({ request, platform }) {
         await db?.prepare('INSERT INTO users (username, password) VALUES (?, ?)')
             .bind(user.username, hashed)
             .run();
-            return new Response('User created', { status: 201 });
+            
+        const newUser = await platform?.env.DB
+            .prepare(`
+                SELECT 
+                    id,
+                    username,
+                    role,
+                    team_id AS teamId,
+                    team_member_id AS teamMemberId 
+                FROM users 
+                WHERE id = last_insert_rowid()`)
+            .first();
+
+        return json(newUser);
     } catch (err) {
         console.error(err);
         return new Response('Signup failed', { status: 400 });
@@ -32,31 +55,47 @@ export const POST: RequestHandler = async function ({ request, platform }) {
 };
 
 export const PUT: RequestHandler = async function ({ locals, request, platform }) {
-    if (!locals.user || locals.user.role !== UserRole.Admin) {
+    if (!locals.user || locals.user.role !== UserRole.ADMIN) {
         return json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id, role, coordinator } = await request.json() as { 
-        id: number, 
-        role: string, 
-        coordinator: number | null 
+    const { userId, role, teamId, teamMemberId } = await request.json() as { 
+        userId: number,
+        role: string,
+        teamId: number | null,
+        teamMemberId: number | null
     };
 
     try {
         await platform?.env.DB
-            .prepare('UPDATE users SET role = ?, projectCoordinatorId = ? WHERE id = ?')
-            .bind(role, coordinator, id)
+            .prepare(`UPDATE users 
+                        SET role = ?, team_id = ?, team_member_id = ? 
+                        WHERE id = ?`)
+            .bind(role, teamId, teamMemberId, userId)
             .run();
+            
+        const updatedUser = await platform?.env.DB
+            .prepare(`
+                SELECT 
+                    id,
+                    username,
+                    role,
+                    team_id AS teamId,
+                    team_member_id AS teamMemberId 
+                FROM users 
+                WHERE id = ?`)
+            .bind(userId)
+            .first();
 
-        return json({ success: true });
+        return json(updatedUser);
     } catch (err) {
-        console.error('Failed to update user:', err);
+        console.error('Failed to update user: ', err);
         return new Response('Internal Error', { status: 500 });
     }
 };
 
 export const DELETE: RequestHandler = async function ({ locals, url, platform }) {
-    if (!locals.user || locals.user.role !== UserRole.Admin) {
+    if (!locals.user || locals.user.role !== UserRole.ADMIN) {
         return json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -73,7 +112,7 @@ export const DELETE: RequestHandler = async function ({ locals, url, platform })
 
         return json({ success: true, deleted: result?.meta.changed_db });
     } catch (err) {
-        console.error('Failed to delete user:', err);
+        console.error('Failed to delete user: ', err);
         return new Response('Internal Error', { status: 500 });
     }
 };

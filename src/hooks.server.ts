@@ -12,7 +12,7 @@ export const handle: Handle = async ({ event, resolve }) => {
         }
     }
 
-    const adminRoutes = ['/admin', '/admin/users', '/lottery'];
+    const adminRoutes = ['/admin', '/tickets', '/lottery'];
 
     const user = event.locals.user;
     if (adminRoutes.includes(event.url.pathname) && (!user || user.role !== 'admin')) {

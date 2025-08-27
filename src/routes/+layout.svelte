@@ -5,11 +5,12 @@
 	import { goto, invalidate } from "$app/navigation";
     import { UserRole } from "$lib/types";
 	import { user } from '$lib/stores/user';
-	import { alertMessage, showAlert } from '$lib/stores/alert';
+	import { alertMessage } from '$lib/stores/alert';
 	
 	let loginModal = $state(false);
     let showPassword = $state(false);
 	let signUpModal = $state(false);
+	let error = $state("");
 
 	let username = $state("");
 	let password = $state("");
@@ -17,6 +18,7 @@
 	let passwordsMatch = $derived(() => password === confirmPassword);
 
 	async function handleSignUp(event: SubmitEvent) {
+    	event.preventDefault();
 
         if (!passwordsMatch()) {
             return;
@@ -29,15 +31,17 @@
 		});
 
 		if (res.ok) {
-			await invalidate('app:auth');
-        	loginModal = false;
-		} else {			
-			showAlert("Sign Up failed.");
+        	signUpModal = false;
+			error = "";
+		} else {
+			error = "Sign up failed.";
 			console.error(await res.text());
 		}
 	}
 
-	async function handleLogin() {
+	async function handleLogin(event: SubmitEvent) {
+    	event.preventDefault();
+
 		const res = await fetch("/api/users/login", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
@@ -45,10 +49,11 @@
 		});
 
 		if (res.ok) {
-			await invalidate('app:auth');
         	loginModal = false;
+			error = "";
+			window.location.href = '/';
 		} else {
-			showAlert("Login failed. Please check your credentials.");
+			error = "Login failed. Please check your credentials.";
 			console.error(await res.text());
 		}
 	}
@@ -59,8 +64,7 @@
 		});
 
 		if (res.ok) {        
-			await invalidate('app:auth');
-			goto('/');
+			window.location.href = '/';
 		} else {
 			console.error(await res.text());
 		}
@@ -78,14 +82,14 @@
 			</Alert>
 		</div>
 	{/if}
-	{#if $user && $user.role == UserRole.Admin}
+	{#if $user && $user.role == UserRole.ADMIN}
 		<nav class="w-full text-white flex items-center justify-center sm:justify-end text-xs sm:text-sm">
 			<Button href="/" class="py-1 m-0 mt-1" color="alternative">
 				<span class="hidden sm:inline">Leaderboard</span>
 				<span class="inline sm:hidden">Home</span>
 			</Button>
+			<Button href="/tickets" class="py-1 m-0 mt-1" color="alternative">Tickets</Button>
 			<Button href="/admin" class="py-1 m-0 mt-1" color="alternative">Admin</Button>
-			<Button href="/admin/users" class="py-1 m-0 mt-1" color="alternative">Users</Button>
 			<Button class="py-1 m-0 mt-1 mr-1" color="alternative" onclick={handleLogout}>Logout</Button>
 		</nav>
 	{:else if $user}
@@ -103,6 +107,9 @@
 	</main>
 </div>
 <Modal bind:open={loginModal} size="xs" class="pt-8 text-center">
+	{#if error}
+		<p class="text-red-500 text-sm">{error}</p>
+	{/if}
 	<form onsubmit={handleLogin} class="space-y-4">
 		<Input bind:value={username} type="text" name="username" placeholder="Username" required/>
 		<div class="flex items-center gap-x-1">
@@ -117,11 +124,14 @@
 		</div>
 		<div>
 			<Button type="submit">Login</Button>
-			<Button color="alternative" onclick={() => (loginModal = false)}>Cancel</Button>
+			<Button color="alternative" onclick={() => (loginModal = false, error = "")}>Cancel</Button>
 		</div>
 	</form>
 </Modal>
 <Modal bind:open={signUpModal} size="xs" class="pt-8 text-center">
+	{#if error}
+		<p class="text-red-500 text-sm">{error}</p>
+	{/if}
 	<form onsubmit={handleSignUp} class="space-y-4">
 		<Input bind:value={username} type="text" name="username" placeholder="Username" required/>
 		<Input bind:value={password} type="password" name="password" placeholder="Password" required/>
@@ -131,7 +141,7 @@
 		{/if}
 		<div>
 			<Button type="submit" disabled={!passwordsMatch()}>Sign Up</Button>
-			<Button color="alternative" onclick={() => (signUpModal = false)}>Cancel</Button>
+			<Button color="alternative" onclick={() => (signUpModal = false, error = "")}>Cancel</Button>
 		</div>
 	</form>
 </Modal>

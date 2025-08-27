@@ -1,280 +1,155 @@
 <script lang="ts">
-    import { onMount } from "svelte";
-    import { Table, TableBody, TableHead, TableHeadCell, Button, Input, Modal, Popover } from "flowbite-svelte";
-    import {  EditSolid, TrashBinSolid } from "flowbite-svelte-icons";
-    import EditableRow from "./components/EditableRow.svelte";
-    import type { Topview, Coordinator } from '$lib/types';
-    
-    let name = $state('');
-    let date = new Date().toLocaleDateString('en-CA');
-    
-    let editModal = $state(false);
-    let deleteContractorModal = $state(false);
-    let deleteTopviewModal = $state(false);
-    let selectedCoordinator: Coordinator | null = null;
-    let updatedName = $state('');
-    let selectedDate: string | null = null
+    import { onMount } from 'svelte';
+    import Table from './components/Table.svelte';
+    import type { Team, TeamMember, User } from '$lib/types';
 
-    let coordinators: Coordinator[] = $state([]);
-    let topviewsArray: Array<Record<string | number, any>> = $state([]);
+    let teams: Team[] = $state([]);
+    let teamMembers: TeamMember[] = $state([]);
+    let users: User[] = $state([]);
 
-    async function fetchCoordinators() {
+    // column definitions
+    const teamColumns = ['Team Name', 'Type', 'Edit'];
+    const teamMemberColumns = ['Name', 'Team', 'Edit'];
+    const userColumns = ['Username', 'Role', 'Team', 'Team Member', 'Edit'];
+
+    async function fetchTeams() {
         try {
-            const response = await fetch('/api/project-coordinators');
+            const response = await fetch('/api/teams');
             const data = await response.json();
 
             if (response.ok && Array.isArray(data)) {
-                coordinators = data.sort((a, b) => a.name.localeCompare(b.name));
+                teams = sortTeams(data);
             } else {
-                console.error('Unexpected response format:', data);
+                console.error('Unexpected response format: ', data);
             }
         } catch (err) {
-            console.error('Failed to fetch topviews:', err);
+            console.error('Failed to fetch topviews: ', err);
         }
     }
 
-    async function fetchTopviews() {
+    async function fetchTeamMembers() {
         try {
-            const response = await fetch('/api/topviews');
-            const json = await response.json();
+            const response = await fetch('/api/team-members');
+            const data = await response.json();
 
-            if (response.ok && Array.isArray(json)) {
-                const topviewsRaw = json as Topview[];
-                
-                for (const topview of topviewsRaw) {
-                    let dayEntry = topviewsArray.find(entry => entry.date === topview.date);
-
-                    if (!dayEntry) {
-                        dayEntry = { date: topview.date };
-                        topviewsArray.push(dayEntry);
-                    }
-                    
-                    dayEntry[topview.coordinatorId] = {
-                        firstTimeApprovals: topview.firstTimeApprovals,
-                        totalSubmissions: topview.totalSubmissions
-                    };
-                }
-
-                topviewsArray.sort((a, b) => b.date.localeCompare(a.date));
-
+            if (response.ok && Array.isArray(data)) {
+                teamMembers = sortTeamMembers(data);
             } else {
-                console.error('Unexpected topviews format.', json);
+                console.error('Unexpected response format: ', data);
             }
         } catch (err) {
-            console.error('Failed to fetch topviews.', err);
+            console.error('Failed to fetch topviews: ', err);
         }
     }
 
-    async function addCoordinator() {
-        const trimmed = name.trim();
-        if (!trimmed) return;
-
+    async function fetchUsers() {
         try {
-            const response = await fetch('/api/project-coordinators', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ name: trimmed })
-            });
+            const response = await fetch('/api/users');
+            const data = await response.json();
 
-            if (!response.ok) {
-                alert('❌ Could not add project coordinator. Please try again.');
-                return;
+            if (response.ok && Array.isArray(data)) {
+                users = sortUsers(data);
+            } else {
+                console.error('Unexpected response format: ', data);
             }
-
-            name = '';
-            fetchCoordinators();
         } catch (err) {
-            console.error('Error adding project coordinator.', err);
-            alert('❌ Could not add project coordinator. Please try again.');
+            console.error('Failed to fetch users: ', err);
         }
     }
 
-    async function editCoordinator() {
-        const trimmed = updatedName.trim();
-        if (!trimmed || !selectedCoordinator) return;
-
-        try {
-            const response = await fetch('/api/project-coordinators', {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: selectedCoordinator.id, name: trimmed })
-            });
-
-            if (!response.ok) {
-                alert('❌ Could not update name. Please try again.');
-                return;
-            }
-
-            selectedCoordinator.name = trimmed;
-            selectedCoordinator = null;
-            updatedName = '';
-        } catch (err) {
-            console.error('Error editing project coordinator.', err);
-            alert('❌ Could not update name. Please try again.');
-        }
+    function handleAdd(resource: string, newItem: any) {
+      if (resource === 'teams') {
+        teams = sortTeams([...teams, newItem]);
+      } else if (resource === 'team-members') {
+        teamMembers = sortTeamMembers([...teamMembers, newItem]);
+      }
     }
 
-    async function deleteCoordinator(id: number) {
-        try {
-            const response = await fetch(`/api/project-coordinators?id=${id}`, {
-                method: 'DELETE'
-            });
-
-            if (!response.ok) {
-                alert('❌ Could not delete project coordinator. Please try again.');
-            }
-
-            const index = coordinators.findIndex(c => c.id === id);
-            if (index !== -1) {
-                coordinators.splice(index, 1);
-            }
-        } catch (err) {
-            console.error('Error deleting coordinator.', err);
-            alert('❌ Could not delete project coordinator. Please try again.');
-        }
+    function handleDelete(resource: string, id: number) {
+      if (resource === 'teams') {
+        teams = sortTeams(teams.filter(team => team.id !== id));
+      } else if (resource === 'team-members') {
+        teamMembers = sortTeamMembers(teamMembers.filter(member => member.id !== id));
+      } else if (resource === 'users') {
+        users = sortUsers(users.filter(user => user.id !== id));
+      }
     }
     
-    async function deleteTopviews(date: string) {
-        try {
-            const response = await fetch(`/api/topviews`, {
-                method: 'DELETE',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ date })
-            });
-
-            if (!response.ok) {
-                alert('❌ Could not delete topviews. Please try again.');
-                return;
-            }
-
-            const index = topviewsArray.findIndex(entry => entry.date === date);
-            if (index !== -1) {
-                topviewsArray.splice(index, 1);
-            }
-        } catch (err) {
-            console.error('Error deleting topviews:', err);
-            alert('❌ Could not delete topviews. Please try again.');
-        }
+    function handleUpdate(resource: string, updatedItem: any) {
+      if (resource === 'teams') {
+        teams = sortTeams(teams.map(team =>
+          team.id === updatedItem.id ? updatedItem : team
+        ));
+      } else if (resource === 'team-members') {
+        teamMembers = sortTeamMembers(teamMembers.map(member =>
+          member.id === updatedItem.id ? updatedItem : member
+        ));
+      } else if (resource === 'users') {
+        users = sortUsers(users.map(user =>
+          user.id === updatedItem.id ? updatedItem : user
+        ));
+      }
+    }
+    
+    function sortTeams(list: Team[]): Team[] {
+      return list.slice().sort();
     }
 
-    function addNewRow() {
-        let dayEntry = topviewsArray.find(entry => entry.date === date);
-
-        if (!dayEntry) {
-            dayEntry = { date: date };
-            topviewsArray.unshift(dayEntry);
+    function sortTeamMembers(list: TeamMember[]): TeamMember[] {
+      return list.slice().sort((a, b) => {
+        if (a.teamId !== b.teamId) {
+          return a.teamId - b.teamId;
         }
+        return a.name.localeCompare(b.name);
+      });
+    }
+
+    function sortUsers(list: User[]): User[] {
+      return list.slice().sort((a, b) => a.username.localeCompare(b.username));
     }
 
     onMount(() => {
-        fetchCoordinators();
-        fetchTopviews();
+        fetchTeams();
+        fetchTeamMembers();
+        fetchUsers();
     });
 </script>
 
-<div class="max-h-[80vh] overflow-y-auto  w-[80vw] max-w-full table-fixed mx-auto">
-    <div class="flex items-center sticky top-0 z-30 mb-2 bg-gray-700">
-        <div class="flex gap-2 w-1/2 m-2">
-            <Input bind:value={name} type="text" placeholder="coordinator name" class="flex-1" onkeydown={(e) => e.key === 'Enter' && addCoordinator()}/>
-            <Button onclick={addCoordinator}>Add PC</Button>
-        </div>
-        <div class="flex gap-2 w-1/2 m-2">
-            <Input bind:value={date} type="date" class="flex-1" onkeydown={(e) => e.key === 'Enter' && addNewRow()}/>
-            <Button onclick={addNewRow}>Add Date</Button>
-        </div>
-    </div>
-    <Table class="text-center w-full">
-        <TableHead>
-            <TableHeadCell>Date</TableHeadCell>
-            {#each coordinators as coordinator}
-                <TableHeadCell class="group relative">
-                    <div class="flex justify-center gap-2">
-                        {coordinator.name}
-                        <Popover>
-                            <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button onclick={() => {
-                                    selectedCoordinator = coordinator;
-                                    updatedName = coordinator.name;
-                                    editModal = true;
-                                }}>
-                                    <EditSolid class="dark:text-gray-400 dark:hover:text-white" />
-                                </button>
-                                <button onclick={() => {
-                                    selectedCoordinator = coordinator;
-                                    deleteContractorModal = true;
-                                }}>
-                                    <TrashBinSolid class="dark:text-gray-400 dark:hover:text-red-800" />
-                                </button>
-                            </div>
-                        </Popover>
-                    </div>
-                </TableHeadCell>
-            {/each} 
-            <TableHeadCell> 
-                <span class="sr-only">Edit</span> 
-            </TableHeadCell>
-        </TableHead>
-        <TableBody>
-            {#each topviewsArray as topviews}
-                <EditableRow {coordinators} {topviews}>
-                    <button
-                        slot="actions"
-                        onclick={() => {
-                            selectedDate = topviews.date;
-                            deleteTopviewModal = true;
-                        }}
-                    >
-                        <TrashBinSolid class="dark:text-gray-400 dark:hover:text-red-800" />
-                    </button>
-                </EditableRow>
-            {/each}
-        </TableBody>
-    </Table>
-</div>
-<Modal form bind:open={editModal} size="xs" class="pt-8 text-center" onaction={async ({ action }) => {
-    if (action === 'success' && selectedCoordinator) {
-        {editCoordinator()}
-        editModal = false;
-    } else if (action === 'decline') {
-        editModal = false;
-        selectedCoordinator = null;
-    }
-    }}>
-    <Input bind:value={updatedName} type="text" name="coordinator" required  />
-    <Button class="mr-1" type="submit" value="success">Save</Button>
-    <Button type="submit" value="decline" color="alternative">Cancel</Button>
-</Modal>
-<Modal form bind:open={deleteContractorModal} size="xs" class="pt-8 text-center" onaction={async ({ action }) => {
-    if (action === 'success' && selectedCoordinator) {
-        {deleteCoordinator(selectedCoordinator.id)}
-        deleteContractorModal = false;
-    } else if (action === 'decline') {
-        deleteContractorModal = false;
-        selectedCoordinator = null;
-    }
-    }}>
-    <p>
-        Delete <strong>{selectedCoordinator?.name}</strong> and all their topviews?<br />
-        <span class="text-red-400">This action cannot be undone.</span>
-    </p>
-    <Button class="mr-2" type="submit" value="success">Delete</Button>
-    <Button type="submit" value="decline" color="alternative">Cancel</Button>
-</Modal>
-<Modal form bind:open={deleteTopviewModal} size="xs" class="pt-8 text-center" onaction={async ({ action }) => {
-    if (action === 'success' && selectedDate) {
-        {deleteTopviews(selectedDate)}
-        deleteTopviewModal = false;
-    } else if (action === 'decline') {
-        deleteTopviewModal = false;
-        selectedCoordinator = null;
-    }
-    }}>
-    <p>
-        Delete all topviews for date <strong>{selectedDate}</strong>?<br />
-        <span class="text-red-400">This action cannot be undone.</span>
-    </p>
-    <Button class="mr-2" type="submit" value="success">Delete</Button>
-    <Button type="submit" value="decline" color="alternative">Cancel</Button>
-</Modal>
+<section class="m-4">
+  <h2 class="text-xl font-bold mb-4 text-center">Users</h2>
+  <Table
+    columns={userColumns}
+    data={users}
+    resource="users"
+    teams={teams}
+    teamMembers={teamMembers}
+    onAdd={handleAdd}
+    onDelete={handleDelete}
+    onUpdate={handleUpdate}
+  />
+</section>
+
+<section class="m-4">
+  <h2 class="text-xl font-bold mb-4 text-center">Teams</h2>
+  <Table
+    columns={teamColumns}
+    data={teams}
+    resource="teams"
+    onAdd={handleAdd}
+    onDelete={handleDelete}
+    onUpdate={handleUpdate}
+  />
+</section>
+
+<section class="m-4">
+  <h2 class="text-xl font-bold mb-4 text-center">Team Members</h2>
+  <Table
+    columns={teamMemberColumns}
+    data={teamMembers}
+    resource="team-members"
+    teams={teams}
+    onAdd={handleAdd}
+    onDelete={handleDelete}
+    onUpdate={handleUpdate}
+  />
+</section>
