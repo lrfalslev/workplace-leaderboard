@@ -142,7 +142,7 @@
                                 placeholder="tickets"
                                 title="Ticket Awarded Work Items" 
                                 size="sm"
-                                class="mb-1"
+                                class="text-center mb-1"
                             />
                             {#if team.type == TeamType.TICKET_AND_TOTAL}
                                 <Input
@@ -150,7 +150,7 @@
                                     placeholder="total"
                                     title="Total Work Items Submitted" 
                                     size="sm"
-                                    class="mt-1"
+                                    class="text-center mt-1"
                                 />
                             {/if}
                         </div>
