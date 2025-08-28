@@ -50,7 +50,13 @@ export const PUT: RequestHandler = async function ({ locals, request, platform }
             .run();
             
         const updatedTeamMember = await platform?.env.DB
-            .prepare('SELECT * FROM team_members WHERE id = ?')
+            .prepare(`
+                SELECT 
+                    id,
+                    name,
+                    team_id AS teamId
+                FROM team_members
+                WHERE id = ?`)
             .bind(teamMemberId)
             .first();
 
