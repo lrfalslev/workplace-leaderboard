@@ -50,27 +50,25 @@
             }
 
             if (team.type === TeamType.TICKET_AND_TOTAL) {
-                if (total !== '' && totalNum !== null) {
-                    if (hasTotal && (isNaN(totalNum) || totalNum < 0)) {
-                        newErrors[teamMemberId] = 'Total must be a non-negative number';
-                        valid = false;
-                        continue;
-                    }
+                const bothEmpty = !hasTickets && !hasTotal;
+                const bothFilled = hasTickets && hasTotal;
 
-                    if (hasTickets && hasTotal && ticketsNum > totalNum) {
-                        newErrors[teamMemberId] = 'Tickets cannot exceed total';
-                        valid = false;
-                        continue;
-                    }
+                if (!bothEmpty && !bothFilled) {
+                    newErrors[teamMemberId] = 'Both fields must be filled or both empty';
+                    valid = false;
+                    continue;
+                }
+                
+                if (hasTotal && (isNaN(totalNum) || totalNum < 0)) {
+                    newErrors[teamMemberId] = 'Total must be a non-negative number';
+                    valid = false;
+                    continue;
+                }
 
-                    const bothEmpty = !hasTickets && !hasTotal;
-                    const bothFilled = hasTickets && hasTotal;
-
-                    if (!bothEmpty && !bothFilled) {
-                        newErrors[teamMemberId] = 'Both fields must be filled or both empty';
-                        valid = false;
-                        continue;
-                    }
+                if (hasTickets && hasTotal && ticketsNum > totalNum) {
+                    newErrors[teamMemberId] = 'Tickets cannot exceed total';
+                    valid = false;
+                    continue;
                 }
             }
         }
