@@ -7,6 +7,8 @@
     let teamMembers: TeamMember[] = $state([]);
     let users: User[] = $state([]);
 
+    let isLoading = $state(true);
+
     // column definitions
     const teamColumns = ['Team Name', 'Type', 'Edit'];
     const teamMemberColumns = ['Name', 'Team', 'Edit'];
@@ -108,48 +110,62 @@
       return list.slice().sort((a, b) => a.username.localeCompare(b.username));
     }
 
-    onMount(() => {
-        fetchTeams();
-        fetchTeamMembers();
-        fetchUsers();
+    onMount(async () => {
+        try {
+            await Promise.all([
+                fetchTeams(),
+                fetchTeamMembers(),
+                fetchUsers()
+            ]);
+        } catch (err) {
+            console.error('Initial data load failed:', err);
+        } finally {
+            isLoading = false;
+        }
     });
 </script>
 
-<section class="m-2 p-4 bg-gray-800 rounded-lg shadow-md">
-  <h2 class="text-xl font-bold mb-4 dark:text-gray-200 text-center">Users</h2>
-  <Table
-    columns={userColumns}
-    data={users}
-    resource="users"
-    teams={teams}
-    teamMembers={teamMembers}
-    onAdd={handleAdd}
-    onDelete={handleDelete}
-    onUpdate={handleUpdate}
-  />
-</section>
+{#if isLoading}
+    <div class="text-center py-8 text-gray-500 dark:text-gray-400">
+        Loading data...
+    </div>
+{:else}
+  <section class="m-2 p-4 bg-gray-800 rounded-lg shadow-md">
+    <h2 class="text-xl font-bold mb-4 dark:text-gray-200 text-center">Users</h2>
+    <Table
+      columns={userColumns}
+      data={users}
+      resource="users"
+      teams={teams}
+      teamMembers={teamMembers}
+      onAdd={handleAdd}
+      onDelete={handleDelete}
+      onUpdate={handleUpdate}
+    />
+  </section>
 
-<section class="m-2 p-4 bg-gray-800 rounded-lg shadow-md">
-  <h2 class="text-xl font-bold mb-4 dark:text-gray-200 text-center">Teams</h2>
-  <Table
-    columns={teamColumns}
-    data={teams}
-    resource="teams"
-    onAdd={handleAdd}
-    onDelete={handleDelete}
-    onUpdate={handleUpdate}
-  />
-</section>
+  <section class="m-2 p-4 bg-gray-800 rounded-lg shadow-md">
+    <h2 class="text-xl font-bold mb-4 dark:text-gray-200 text-center">Teams</h2>
+    <Table
+      columns={teamColumns}
+      data={teams}
+      resource="teams"
+      onAdd={handleAdd}
+      onDelete={handleDelete}
+      onUpdate={handleUpdate}
+    />
+  </section>
 
-<section class="m-2 p-4 bg-gray-800 rounded-lg shadow-md">
-  <h2 class="text-xl font-bold mb-4 dark:text-gray-200 text-center">Team Members</h2>
-  <Table
-    columns={teamMemberColumns}
-    data={teamMembers}
-    resource="team-members"
-    teams={teams}
-    onAdd={handleAdd}
-    onDelete={handleDelete}
-    onUpdate={handleUpdate}
-  />
-</section>
+  <section class="m-2 p-4 bg-gray-800 rounded-lg shadow-md">
+    <h2 class="text-xl font-bold mb-4 dark:text-gray-200 text-center">Team Members</h2>
+    <Table
+      columns={teamMemberColumns}
+      data={teamMembers}
+      resource="team-members"
+      teams={teams}
+      onAdd={handleAdd}
+      onDelete={handleDelete}
+      onUpdate={handleUpdate}
+    />
+  </section>
+{/if}

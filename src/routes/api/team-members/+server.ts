@@ -72,15 +72,16 @@ export const DELETE: RequestHandler = async function ({ locals, url, platform })
         return json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const id = Number(url.searchParams.get('id'));
+    const teamMemberId = Number(url.searchParams.get('id'));
 
-    if (!id || typeof id !== 'number') {
-        return new Response('Invalid or missing ID', { status: 400 });
+    if (!teamMemberId || typeof teamMemberId !== 'number') {
+        return new Response('Invalid or missing team member id', { status: 400 });
     }
 
     try {
-        const result = await platform?.env.DB.prepare('DELETE FROM team_members WHERE id = ?')
-            .bind(id)
+        const result = await platform?.env.DB
+            .prepare('DELETE FROM team_members WHERE id = ?')
+            .bind(teamMemberId)
             .run();
 
         return json({ success: true, deleted: result?.meta.changed_db });

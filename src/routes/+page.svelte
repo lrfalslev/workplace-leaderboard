@@ -58,11 +58,22 @@
                 const totalBonuses = row.totalTickets - row.totalWorkItemTickets;
                 
                 if (!isAdmin) {
-                    return `
+                        return `
                             <div class="p-2 text-sm bg-white dark:bg-gray-800 dark:text-white rounded shadow">
-                                Total Tickets: ${row.totalTickets}<br/>
-                                Work Tickets: ${row.totalWorkItemTickets ?? 0}<br/>
-                                Bonuses: ${totalBonuses ?? 0}<br/>
+                                <strong>${row.teamMemberName}</strong>
+                                <hr class="my-1 border-gray-300 dark:border-gray-600"/>
+                                <div class="flex justify-between">
+                                    <span>Work Tickets:</span>
+                                    <span class="ml-3 text-right font-mono">${row.totalWorkItemTickets ?? 0}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Bonuses:</span>
+                                    <span class="ml-3 text-right font-mono">${totalBonuses ?? 0}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Total Tickets:</span>
+                                    <span class="ml-3 text-right font-mono">${row.totalTickets}</span>
+                                </div>
                             </div>
                         `;
                     }
@@ -73,10 +84,29 @@
 
                 return `
                     <div class="p-2 text-sm bg-white dark:bg-gray-800 dark:text-white rounded shadow">
-                        <strong>${row.teamMemberName} (${percentage}%)</strong><br/>
-                        First Time Approvals: ${row.totalWorkItemTickets ?? 0}<br/>
-                        Topview Submissions: ${row.totalWorkItems ?? 0}<br/>
-                        Total Bonuses: ${totalBonuses ?? 0}<br/>
+                        <strong>${row.teamMemberName} (${percentage}%)</strong>
+                        <hr class="my-1 border-gray-300 dark:border-gray-600"/>
+                        <div class="flex justify-between">
+                            <span>First Time Approvals:</span>
+                            <span class="ml-3 text-right font-mono">${row.totalWorkItemTickets ?? 0}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Topview Submissions:</span>
+                            <span class="ml-3 text-right font-mono">${row.totalWorkItems ?? 0}</span>
+                        </div>
+                        <hr class="my-1 border-gray-300 dark:border-gray-600"/>
+                        <div class="flex justify-between">
+                            <span>Work Tickets:</span>
+                            <span class="ml-3 text-right font-mono">${row.totalWorkItemTickets ?? 0}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Bonus Tickets:</span>
+                            <span class="ml-3 text-right font-mono">${totalBonuses ?? 0}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Total Tickets:</span>
+                            <span class="ml-3 text-right font-mono">${row.totalTickets ?? 0}</span>
+                        </div>
                     </div>
                 `;
             }
@@ -152,6 +182,8 @@
             <Chart {options} />
         </div>
     {:else}
-        <p class="pt-4 dark:text-gray-400 flex justify-center">Loading chart data…</p>
+        <div class="text-center py-8 text-gray-500 dark:text-gray-400">
+            Loading data...
+        </div>
     {/if}
 </Card>

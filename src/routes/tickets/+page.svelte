@@ -5,10 +5,11 @@
     import { showAlert } from "$lib/stores/alert";
     import type { Row } from "./components/EditableRow.svelte";
     import TeamTable from "./components/TeamTable.svelte";
+    import BonusTicketTable from "./components/BonusTicketTable.svelte";
     
     let teams = $state<Team[]>([]);
     let teamMembers = $state<TeamMember[]>([]);
-    let workItems = $state<Row[]>([]);   
+    let workItems = $state<Row[]>([]); 
     
     let selectedTeamId = $state<number | null>(null);
 
@@ -18,6 +19,8 @@
     let deleteRowIds = $state<number[]>([]);
 
     let newlyAddedDate = $state<string | null>(null);
+
+    let isLoading = $state(true);
 
     const filteredMembers = $derived(() => 
         teamMembers.filter(member => member.teamId === selectedTeamId)
@@ -222,30 +225,48 @@
         }
     }
 
-    onMount(() => {
-        fetchTeams();
-        fetchTeamMembers();
-        fetchWorkItems();
+    onMount(async () => {
+        try {
+            await Promise.all([
+                fetchTeams(),
+                fetchTeamMembers(),
+                fetchWorkItems()
+            ]);
+        } catch (err) {
+            console.error('Initial data load failed:', err);
+        } finally {
+            isLoading = false;
+        }
     });
 </script>
 
-<div class="max-w-full mb-8">
-    <Tabs tabStyle="underline">
-        {#each teams as team}
-            <TabItem title={team.name} open={selectedTeamId === team.id} onclick={() => selectedTeamId = team.id}>
-                <TeamTable 
-                    team={team}
-                    teamMembers={filteredMembers()}
-                    rows={filteredWorkItems()}
-                    addRow={addRow}
-                    saveRow={saveRow}
-                    deleteRow={deleteRow}
-                    newlyAddedDate={newlyAddedDate}>
-                </TeamTable>
+{#if isLoading}
+    <div class="text-center py-8 text-gray-500 dark:text-gray-400">
+        Loading data...
+    </div>
+{:else}
+    <div class="max-w-full mb-8">
+        <Tabs tabStyle="underline">
+            {#each teams as team}
+                <TabItem title={team.name} open={selectedTeamId === team.id} onclick={() => selectedTeamId = team.id}>
+                    <TeamTable 
+                        team={team}
+                        teamMembers={filteredMembers()}
+                        rows={filteredWorkItems()}
+                        addRow={addRow}
+                        saveRow={saveRow}
+                        deleteRow={deleteRow}
+                        newlyAddedDate={newlyAddedDate}>
+                    </TeamTable>
+                </TabItem>
+            {/each}
+            <TabItem title="Bonus Tickets">
+                <BonusTicketTable teamMembers={teamMembers} />
             </TabItem>
-        {/each}
-    </Tabs>
-</div>
+        </Tabs>
+    </div>
+{/if}
+
 <Modal form bind:open={deleteRowModal} size="xs" class="pt-8 text-center" onaction={async ({ action }) => {
     if (action === 'success' && deleteRowIds?.length) {
         await deleteWorkItems();

@@ -8,14 +8,22 @@ export const GET: RequestHandler = async function ({ platform }) {
                 team_members.name AS teamMemberName,
                 teams.id AS teamId,
                 teams.name AS teamName,
-                SUM(COALESCE(work_items.tickets_awarded, 0)) + SUM(COALESCE(bonus_tickets.tickets_awarded, 0)) AS totalTickets,
-                SUM(work_items.tickets_awarded) AS totalWorkItemTickets,
-                SUM(work_items.work_items) AS totalWorkItems
+                COALESCE(work_item_totals.total_work_item_tickets, 0) + COALESCE(bonus_ticket_totals.total_bonus_tickets, 0) AS totalTickets,
+                COALESCE(work_item_totals.total_work_item_tickets, 0) AS totalWorkItemTickets,
+                COALESCE(work_item_totals.total_work_items, 0) AS totalWorkItems
             FROM team_members
-            LEFT JOIN work_items ON work_items.team_member_id = team_members.id
             LEFT JOIN teams ON team_members.team_id = teams.id
-            LEFT JOIN bonus_tickets ON bonus_tickets.team_member_id = team_members.id
-            GROUP BY team_members.id, team_members.name, teams.name
+            LEFT JOIN (
+                SELECT team_member_id, SUM(tickets_awarded) AS total_work_item_tickets, SUM(work_items) AS total_work_items
+                FROM work_items
+                GROUP BY team_member_id
+            ) work_item_totals ON work_item_totals.team_member_id = team_members.id
+            LEFT JOIN (
+                SELECT team_member_id, SUM(tickets_awarded) AS total_bonus_tickets
+                FROM bonus_tickets
+                GROUP BY team_member_id
+            ) bonus_ticket_totals ON bonus_ticket_totals.team_member_id = team_members.id
+            GROUP BY team_members.id, team_members.name, teams.id, teams.name
         `)
         .all();
 
