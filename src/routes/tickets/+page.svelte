@@ -14,6 +14,7 @@
 
     let deleteRowModal = $state(false);
     let deleteRowDate = $state<string | null>(null);
+    let deleteRowTeamName = $state<string | null>(null);
     let deleteRowIds = $state<number[]>([]);
 
     let newlyAddedDate = $state<string | null>(null);
@@ -148,8 +149,9 @@
         newlyAddedDate = date;
     }
 
-    function deleteRow(date: string, ids: number[]) {
+    function deleteRow(date: string, teamName: string, ids: number[]) {
         deleteRowDate = date;
+        deleteRowTeamName = teamName;
         deleteRowIds = ids;
         deleteRowModal = true;
     }
@@ -253,9 +255,17 @@
     }
     }}>
     <p>
-        Delete all work items for date <strong>{deleteRowDate}</strong>?<br />
+        Delete all <strong>{deleteRowTeamName}</strong> work items for date <strong>{deleteRowDate}</strong>?<br />
         <span class="text-red-400">This action cannot be undone.</span>
     </p>
     <Button class="mr-2" type="submit" value="success">Delete</Button>
     <Button type="submit" value="decline" color="alternative">Cancel</Button>
 </Modal>
+
+<style>
+  :global([role="tabpanel"]) {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+    border-top-left-radius: 0 !important;
+  }
+</style>

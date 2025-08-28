@@ -1,7 +1,7 @@
 <script lang="ts">
-    import { TableBodyRow, TableBodyCell, Input, Button } from "flowbite-svelte";
-    import {  EditSolid, TrashBinSolid } from "flowbite-svelte-icons";
-    import type { WorkItem } from '$lib/types';
+    import { TableBodyRow, TableBodyCell, Input, Button, Tooltip } from "flowbite-svelte";
+    import {  EditSolid, ExclamationCircleSolid, TrashBinSolid } from "flowbite-svelte-icons";
+    import { TeamType, type Team, type WorkItem } from '$lib/types';
     import { onMount } from "svelte";
 
     export type Row = {
@@ -17,7 +17,8 @@
         workItems?: string;
     };
 
-    let { teamMemberIds, row, saveRow, deleteRow, editing } = $props<{
+    let { team, teamMemberIds, row, saveRow, deleteRow, editing } = $props<{
+        team: Team;
         teamMemberIds: number[];
         row: Row;
         saveRow: (payload: WorkItem[]) => Promise<boolean>;
@@ -26,8 +27,61 @@
     }>();
 
     let formInputs = $state<Record<string, WorkItemFormInput>>({});
+    let errors = $state<Record<number, string>>({});
+    
+    function validateForm(): boolean {
+        let valid = true;
+        const newErrors: Record<number, string> = {};
+
+        for (const input of Object.values(formInputs)) {
+            const { teamMemberId, ticketsAwarded, workItems } = input;
+            const tickets = ticketsAwarded.trim();
+            const total = workItems?.trim();
+
+            const hasTickets = tickets !== '';
+            const hasTotal = total !== '';
+            const ticketsNum = Number(tickets);
+            const totalNum = Number(total);
+
+            if (hasTickets && (isNaN(ticketsNum) || ticketsNum < 0)) {
+                newErrors[teamMemberId] = 'Tickets must be a non-negative number';
+                valid = false;
+                continue;
+            }
+
+            if (team.type === TeamType.TICKET_AND_TOTAL) {
+                if (total !== '' && totalNum !== null) {
+                    if (hasTotal && (isNaN(totalNum) || totalNum < 0)) {
+                        newErrors[teamMemberId] = 'Total must be a non-negative number';
+                        valid = false;
+                        continue;
+                    }
+
+                    if (hasTickets && hasTotal && ticketsNum > totalNum) {
+                        newErrors[teamMemberId] = 'Tickets cannot exceed total';
+                        valid = false;
+                        continue;
+                    }
+
+                    const bothEmpty = !hasTickets && !hasTotal;
+                    const bothFilled = hasTickets && hasTotal;
+
+                    if (!bothEmpty && !bothFilled) {
+                        newErrors[teamMemberId] = 'Both fields must be filled or both empty';
+                        valid = false;
+                        continue;
+                    }
+                }
+            }
+        }
+
+        errors = newErrors;
+        return valid;
+    }
 
     async function handleSave() {
+        if (!validateForm()) 
+            return;
 
         const payload: WorkItem[] = Object.values(formInputs)
             .filter(item => item.ticketsAwarded !== '')
@@ -46,7 +100,7 @@
 
     function handleDelete() {
         const workItemIds = (Object.values(row.workItems) as WorkItem[]).map(item => item.id);
-        deleteRow(row.date, workItemIds);
+        deleteRow(row.date, team.name, workItemIds);
     }
       
     function toggleEditing() {
@@ -74,28 +128,38 @@
     });
 </script>
 
-<TableBodyRow>
-    <TableBodyCell class="text-sm p-4">{row.date}</TableBodyCell>
+<TableBodyRow class="items-center">
+    <TableBodyCell>{row.date}</TableBodyCell>
     
     {#each teamMemberIds as teamMemberId (teamMemberId)}
         {@const workItem = row.workItems[teamMemberId]}
-        <TableBodyCell class="text-gray-400 border dark:border-gray-700">
+        <TableBodyCell class="border dark:border-gray-700">
             {#if editing}
                 {#if formInputs[teamMemberId]}
-                    <Input
-                        bind:value={formInputs[teamMemberId].ticketsAwarded}
-                        placeholder="tickets"
-                        title="Ticket Awarded Work Items" 
-                        size="sm"
-                        class="mb-1"
-                    />
-                    <Input
-                        bind:value={formInputs[teamMemberId].workItems}
-                        placeholder="total"
-                        title="Total Work Items Submitted" 
-                        size="sm"
-                        class="mt-1"
-                    />
+                    <div class="relative flex justify-center items-center">
+                        <div>
+                            <Input
+                                bind:value={formInputs[teamMemberId].ticketsAwarded}
+                                placeholder="tickets"
+                                title="Ticket Awarded Work Items" 
+                                size="sm"
+                                class="mb-1"
+                            />
+                            {#if team.type == TeamType.TICKET_AND_TOTAL}
+                                <Input
+                                    bind:value={formInputs[teamMemberId].workItems}
+                                    placeholder="total"
+                                    title="Total Work Items Submitted" 
+                                    size="sm"
+                                    class="mt-1"
+                                />
+                            {/if}
+                        </div>
+                        {#if errors[teamMemberId]}
+                            <ExclamationCircleSolid class="text-red-500 ml-2" />
+                            <Tooltip>{errors[teamMemberId]}</Tooltip>
+                        {/if}
+                    </div>
                 {:else}
                     <span class="text-sm text-gray-400">Loading...</span>
                 {/if}
@@ -113,11 +177,12 @@
         </TableBodyCell>
     {/each}
 
-    <TableBodyCell >
+    <TableBodyCell class="flex justify-center items-center">
         {#if editing}
-            <div class="flex flex-col gap-1 items-center items-stretch">
-                <Button type="button" class="px-2 py-1 text-sm" onclick={handleSave}>Save</Button>
-                <Button type="button" class="px-2 py-1 text-sm" onclick={toggleEditing}>Cancel</Button>
+
+            <div class="flex flex-wrap justify-center gap-2 max-w-[200px] w-full">
+                <Button type="button" class="px-2 py-1 text-sm flex-1 min-w-[48%]" onclick={handleSave}>Save</Button>
+                <Button type="button" class="px-2 py-1 text-sm flex-1 min-w-[48%]" onclick={toggleEditing}>Cancel</Button>
             </div>
         {:else}
             <div>

@@ -10,7 +10,7 @@
         rows: Row[];
         addRow: (date: string) => void;
         saveRow: (payload: WorkItem[]) => Promise<boolean>;
-        deleteRow: (date: string, workItemIds: number[]) => void;
+        deleteRow: (date: string, teamName: string, workItemIds: number[]) => void;
         newlyAddedDate: string | null;
     }>();
 
@@ -19,8 +19,8 @@
 </script>
 
 <div class="max-h-[80vh] overflow-y-auto  w-[80vw] max-w-full table-fixed mx-auto">
-    <Card class="max-w-[100%] p-4 border-none">
-        <div class="flex items-left sticky top-0 z-30 mb-2 justify-end">
+    <Card class="max-w-[100%] p-3 pt-1 border-none">
+        <div class="flex items-left sticky top-0 z-30 justify-end">
             <div class="flex gap-2 m-2">
                 <Input bind:value={newDate} type="date" class="flex-1" onkeydown={(e) => e.key === 'Enter' && addRow(newDate)}/>
                 <Button
@@ -47,6 +47,7 @@
             <TableBody>
                 {#each rows as row (team.id + '-' + row.date)}
                     <EditableRow 
+                        team={team}
                         teamMemberIds={teamMembers.map((members: TeamMember) => members.id)}
                         row={row}
                         saveRow={saveRow}
