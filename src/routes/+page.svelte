@@ -182,6 +182,8 @@
             <Chart {options} />
         </div>
     {:else}
-        <p class="pt-4 dark:text-gray-400 flex justify-center">Loading chart data…</p>
+        <div class="text-center py-8 text-gray-500 dark:text-gray-400">
+            Loading data...
+        </div>
     {/if}
 </Card>
