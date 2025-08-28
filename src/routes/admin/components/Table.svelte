@@ -205,9 +205,9 @@
     </form>
 {/if}
 
-<div class="max-h-full overflow-x-auto">
+<div class="max-h-full overflow-x-auto border-2 dark:border-gray-700">
     <div class="max-h-[500px] overflow-y-auto">
-        <table class="w-auto md:w-full text-center text-xs md:text-base dark:text-gray-800 min-w-full border dark:border-gray-700">
+        <table class="w-auto md:w-full text-center text-xs md:text-base dark:text-gray-800 min-w-full">
           <thead class="text-xs uppercase">
             <tr class="dark:text-gray-400">
               {#each columns as col}
@@ -248,7 +248,7 @@
 
 <Modal bind:open={editModal} size="xs" class="pt-8 text-center">
     <h3 class="text-lg font-semibold mb-4">
-        Update <strong>{selected?.username ?? selected?.name}</strong>
+        Update <strong>{selected?.username ?? selected?.name}</strong>
     </h3>
     {#if resource === 'users'}
         <select bind:value={selectedRole} class="custom-select">

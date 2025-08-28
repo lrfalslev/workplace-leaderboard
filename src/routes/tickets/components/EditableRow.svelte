@@ -128,7 +128,7 @@
 </script>
 
 <TableBodyRow class="items-center">
-    <TableBodyCell>{row.date}</TableBodyCell>
+    <TableBodyCell class="px-2 text-center">{row.date}</TableBodyCell>
     
     {#each teamMemberIds as teamMemberId (teamMemberId)}
         {@const workItem = row.workItems[teamMemberId]}

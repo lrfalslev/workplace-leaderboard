@@ -29,9 +29,9 @@
         </Button>
     </div>
 </div>
-<div class="max-h-[75vh] overflow-y-auto w-[80vw] max-w-full table-fixed mx-auto">
-    <Card class="max-w-[100%] p-3 pt-1 border-none">
-        <Table class="text-center w-full table-fixed border dark:border-gray-700">
+<div class="max-h-[75vh] overflow-y-auto w-[80vw] max-w-full table-fixed mx-auto border-2 dark:border-gray-700">
+    <Card class="max-w-[100%] border-none">
+        <Table class="text-center w-full table-fixed p-0">
             <TableHead>
                 <TableHeadCell>Date</TableHeadCell>
                 {#each teamMembers as teamMember}
