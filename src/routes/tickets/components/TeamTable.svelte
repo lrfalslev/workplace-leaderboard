@@ -13,18 +13,17 @@
     }>();
 
     let newDate = $state(new Date().toLocaleDateString('en-CA'));
-    
-    console.log("TEAMTABLE teamType snapshot:", $state.snapshot(teamType));
-    console.log("TEAMTABLE teamMembers snapshot:", $state.snapshot(teamMembers));
-    console.log("TEAMTABLE rows snapshot:", $state.snapshot(rows));
+    const doesDateExist = $derived(() => rows.some((row: Row) => row.date === newDate));
 </script>
 
 <div class="max-h-[80vh] overflow-y-auto  w-[80vw] max-w-full table-fixed mx-auto">
     <Card class="max-w-[100%] p-8">
         <div class="flex items-center sticky top-0 z-30 mb-2">
             <div class="flex gap-2 w-1/2 m-2">
-                <Input bind:value={newDate} type="date" class="flex-1" onkeydown={(e) => e.key === 'Enter' && addRow()}/>
-                <Button onclick={addRow}>Add Date</Button>
+                <Input bind:value={newDate} type="date" class="flex-1" onkeydown={(e) => e.key === 'Enter' && addRow(newDate)}/>
+                <Button
+                    onclick={() => addRow(newDate)}
+                    disabled={doesDateExist()} title={doesDateExist() ? 'This date already exists' : ''}>Add Date</Button>
             </div>
         </div>
         <Table class="text-center w-full table-fixed border dark:border-gray-700">

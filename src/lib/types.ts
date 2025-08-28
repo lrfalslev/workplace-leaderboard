@@ -41,11 +41,11 @@ export type User = {
 };
 
 export type WorkItem = {
-    id: number;
+    id: number | null;
     date: string;
-    ticketsAwarded: number;
-    workItems: number;
     teamMemberId: number;
+    ticketsAwarded: number;
+    workItems: number | null;
 }
 
 export type SummaryRow = {

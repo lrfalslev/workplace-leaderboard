@@ -2,11 +2,20 @@
     import { TableBodyRow, TableBodyCell, Input, Button } from "flowbite-svelte";
     import {  EditSolid, TrashBinSolid } from "flowbite-svelte-icons";
     import type { WorkItem } from '$lib/types';
+    import { onMount } from "svelte";
 
     export type Row = {
         date: string;
         workItems: Record<number, WorkItem>;
     }
+
+    type WorkItemFormInput = {
+        id: number | null;
+        date: string;
+        teamMemberId: number;
+        ticketsAwarded: string;
+        workItems?: string;
+    };
 
     let { teamMemberIds, row, saveRow, deleteRow } = $props<{
         teamMemberIds: number[];
@@ -16,26 +25,21 @@
     }>();
 
     let editing = $state(false);
-    let formInputs = $state<Record<string, WorkItem>>({});
-    
-    $effect(() => {
-        formInputs = {};
-        for (const teamMemberId of teamMemberIds) {
-            const existing = row.workItems[teamMemberId];
-            formInputs[teamMemberId] = existing
-                ? { ...existing }
-                : {
-                    //do we need to set id to null?
-                    date: row.date,
-                    teamMemberId: teamMemberId,
-                    ticketsAwarded: 0,
-                    workItems: 0
-                };
-        }
-    });
+    let formInputs = $state<Record<string, WorkItemFormInput>>({});
 
     async function handleSave() {
-        const success = await saveRow(Object.values(formInputs));
+
+        const payload: WorkItem[] = Object.values(formInputs)
+            .filter(item => item.ticketsAwarded !== '')
+            .map(item => ({
+                id: item.id,
+                date: item.date,
+                teamMemberId: item.teamMemberId,
+                ticketsAwarded: Number(item.ticketsAwarded),
+                workItems: item.workItems === '' ? null : Number(item.workItems)
+            }));
+
+        const success = await saveRow(payload);
         if (success)
             toggleEditing();
     }
@@ -48,6 +52,26 @@
     function toggleEditing() {
         editing = !editing;
     }
+
+    onMount(() => {
+        const initialInputs: Record<string, WorkItemFormInput> = {};
+        for (const teamMemberId of teamMemberIds) {
+            const existing = row.workItems[teamMemberId];
+            initialInputs[teamMemberId] = existing
+                ? {
+                    ...existing,
+                    ticketsAwarded: existing.ticketsAwarded != null ? String(existing.ticketsAwarded) : '',
+                    workItems: existing.workItems != null ? String(existing.workItems) : ''
+                }
+                : {
+                    date: row.date,
+                    teamMemberId,
+                    ticketsAwarded: '',
+                    workItems: ''
+                };
+        }
+        formInputs = initialInputs;
+    });
 </script>
 
 <TableBodyRow>
@@ -59,7 +83,7 @@
             {#if editing}
                 <Input
                     bind:value={formInputs[teamMemberId].ticketsAwarded}
-                    placeholder="accepted"
+                    placeholder="tickets"
                     title="Ticket Awarded Work Items" 
                     size="sm"
                     class="mb-1"
@@ -72,9 +96,9 @@
                     class="mt-1"
                 />
             {:else}
-                {#if !workItem}
+                {#if workItem == null || workItem.ticketsAwarded == null || workItem.ticketsAwarded === ""}
                     -
-                {:else if workItem.workItems === null}
+                {:else if workItem.workItems == null}
                     {workItem.ticketsAwarded}
                 {:else if workItem.workItems === 0}
                     0
