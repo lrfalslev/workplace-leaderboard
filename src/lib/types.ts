@@ -57,3 +57,14 @@ export type SummaryRow = {
     totalWorkItemTickets: number;
     totalWorkItems: number;
 }
+
+export type BonusTicket = {
+    id: number;
+    date: string;
+    description: string;
+    ticketsAwarded: number;
+    teamMemberId: number;
+    managerId: number;
+    teamMemberName: string;
+    managerName: string;
+};

@@ -5,10 +5,11 @@
     import { showAlert } from "$lib/stores/alert";
     import type { Row } from "./components/EditableRow.svelte";
     import TeamTable from "./components/TeamTable.svelte";
+    import BonusTicketTable from "./components/BonusTicketTable.svelte";
     
     let teams = $state<Team[]>([]);
     let teamMembers = $state<TeamMember[]>([]);
-    let workItems = $state<Row[]>([]);   
+    let workItems = $state<Row[]>([]); 
     
     let selectedTeamId = $state<number | null>(null);
 
@@ -244,6 +245,9 @@
                 </TeamTable>
             </TabItem>
         {/each}
+        <TabItem title="Bonus Tickets">
+            <BonusTicketTable teamMembers={teamMembers} />
+        </TabItem>
     </Tabs>
 </div>
 <Modal form bind:open={deleteRowModal} size="xs" class="pt-8 text-center" onaction={async ({ action }) => {

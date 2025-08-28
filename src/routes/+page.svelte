@@ -76,7 +76,8 @@
                         <strong>${row.teamMemberName} (${percentage}%)</strong><br/>
                         First Time Approvals: ${row.totalWorkItemTickets ?? 0}<br/>
                         Topview Submissions: ${row.totalWorkItems ?? 0}<br/>
-                        Total Bonuses: ${totalBonuses ?? 0}<br/>
+                        Bonus Tickets: ${totalBonuses ?? 0}<br/>
+                        Total Tickets: ${row.totalTickets ?? 0}<br/>
                     </div>
                 `;
             }

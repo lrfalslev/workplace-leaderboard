@@ -39,3 +39,65 @@ input[type="search"]::-webkit-search-cancel-button {
 button:not(:disabled) {
   cursor: pointer;
 }
+
+.custom-input {
+  display: block;
+  width: 100%;
+  background-color: #374151;
+  color: #ffffff;
+  border-color: #4b5563;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  padding: 0.625rem 0.625rem;
+  outline: none;
+  cursor: text;
+}
+
+.custom-input:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.custom-input:focus {
+  border-color: #ef562f;
+  box-shadow: 0 0 0 1px #ef562f;
+}
+
+.custom-input::placeholder {
+  color: #9ca3af;
+}
+
+.custom-select {
+  display: block;
+  width: 100%;
+  color: #111827;
+  background-color: #f9fafb;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  padding: 0.625rem 0.625rem;
+  outline: none;
+}
+
+.custom-select:focus {
+  --ring-color: #ef562f;
+  box-shadow: 0 0 0 2px var(--ring-color);
+  border-color: var(--ring-color);
+}
+
+@media (prefers-color-scheme: dark) {
+  .custom-select {
+    background-color: #374151;
+    border-color: #4b5563;
+    color: #fff;
+  }
+
+  .custom-select:focus {
+    border-color: #ef562f;
+    box-shadow: 0 0 0 2px #ef562f;
+  }
+}
+
+.custom-select option[disabled] {
+  color: #9ca3af;
+}
