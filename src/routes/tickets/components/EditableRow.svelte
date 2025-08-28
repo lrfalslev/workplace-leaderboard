@@ -17,14 +17,14 @@
         workItems?: string;
     };
 
-    let { teamMemberIds, row, saveRow, deleteRow } = $props<{
+    let { teamMemberIds, row, saveRow, deleteRow, editing } = $props<{
         teamMemberIds: number[];
         row: Row;
         saveRow: (payload: WorkItem[]) => Promise<boolean>;
         deleteRow: (date: string, workItemIds: number[]) => void;
+        editing: boolean;
     }>();
 
-    let editing = $state(false);
     let formInputs = $state<Record<string, WorkItemFormInput>>({});
 
     async function handleSave() {
@@ -81,20 +81,24 @@
         {@const workItem = row.workItems[teamMemberId]}
         <TableBodyCell class="text-gray-400 border dark:border-gray-700">
             {#if editing}
-                <Input
-                    bind:value={formInputs[teamMemberId].ticketsAwarded}
-                    placeholder="tickets"
-                    title="Ticket Awarded Work Items" 
-                    size="sm"
-                    class="mb-1"
-                />
-                <Input
-                    bind:value={formInputs[teamMemberId].workItems}
-                    placeholder="total"
-                    title="Total Work Items Submitted" 
-                    size="sm"
-                    class="mt-1"
-                />
+                {#if formInputs[teamMemberId]}
+                    <Input
+                        bind:value={formInputs[teamMemberId].ticketsAwarded}
+                        placeholder="tickets"
+                        title="Ticket Awarded Work Items" 
+                        size="sm"
+                        class="mb-1"
+                    />
+                    <Input
+                        bind:value={formInputs[teamMemberId].workItems}
+                        placeholder="total"
+                        title="Total Work Items Submitted" 
+                        size="sm"
+                        class="mt-1"
+                    />
+                {:else}
+                    <span class="text-sm text-gray-400">Loading...</span>
+                {/if}
             {:else}
                 {#if workItem == null || workItem.ticketsAwarded == null || workItem.ticketsAwarded === ""}
                     -

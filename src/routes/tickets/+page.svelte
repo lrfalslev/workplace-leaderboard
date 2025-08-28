@@ -237,7 +237,8 @@
                     rows={filteredWorkItems()}
                     addRow={addRow}
                     saveRow={saveRow}
-                    deleteRow={deleteRow}>
+                    deleteRow={deleteRow}
+                    newlyAddedDate={newlyAddedDate}>
                 </TeamTable>
             </TabItem>
         {/each}
