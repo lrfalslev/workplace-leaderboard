@@ -16,6 +16,42 @@
     let deleteRowDate = $state<string | null>(null);
     let deleteRowIds = $state<number[]>([]);
 
+    let newlyAddedDate = $state<string | null>(null);
+
+    const filteredMembers = $derived(() => 
+        teamMembers.filter(member => member.teamId === selectedTeamId)
+    );
+
+    const filteredWorkItems = $derived(() => {
+        const memberIds = filteredMembers().map(member => member.id);
+        const seenDates = new Set<string>();
+
+        return workItems
+            .map(row => {
+                const filtered: Row = {
+                    date: row.date,
+                    workItems: {}
+                };
+
+                for (const id of memberIds) {
+                    if (row.workItems[id]) {
+                        filtered.workItems[id] = row.workItems[id];
+                    }
+                }
+
+                return filtered;
+            })
+            .filter(row => {
+                const isRelevant = Object.keys(row.workItems).length > 0 || row.date === newlyAddedDate;
+                const isNew = !seenDates.has(row.date);
+                if (isRelevant && isNew) {
+                    seenDates.add(row.date);
+                    return true;
+                }
+                return false;
+            });
+    });
+
     async function fetchTeams() {
         try {
             const response = await fetch('/api/teams');
@@ -95,9 +131,21 @@
     }
 
     function addRow(date: string) {
-        if (!workItems.find(row => row.date === date)) {
-            workItems = [...workItems, { date, workItems: {} }];
+        const memberIds = filteredMembers().map(member => member.id);
+
+        const dateExistsForTeam = workItems.some(row =>
+            row.date === date &&
+            memberIds.some(id => row.workItems[id])
+        );
+
+        if (dateExistsForTeam) {
+            showAlert(`Date ${date} already exists for this team.`);
+            return;
         }
+
+        workItems = [...workItems, { date, workItems: {} }]
+            .sort((a, b) => b.date.localeCompare(a.date));
+        newlyAddedDate = date;
     }
 
     function deleteRow(date: string, ids: number[]) {
@@ -163,6 +211,7 @@
                 };
             }
 
+            newlyAddedDate = null;
             return true;
         } catch (err) {
             console.error('Error updating work items: ', err);
@@ -170,20 +219,6 @@
             return false;
         }
     }
-    
-    // const filteredMembers = $derived(() => 
-    //     teamMembers.filter(tm => tm.teamId === selectedTeamId)
-    // );
-
-    // const filteredWorkItems = $derived(() => 
-    //     workItemsArray.map(entry => {
-    //     const filteredEntry = { ...entry };
-    //         filteredEntry.teamData = filteredMembers().map(member => ({
-    //             member,
-    //             data: entry[member.id]
-    //     }));
-    //     return filteredEntry;
-    // }));
 
     onMount(() => {
         fetchTeams();
@@ -197,9 +232,9 @@
         {#each teams as team}
             <TabItem title={team.name} open={selectedTeamId === team.id} onclick={() => selectedTeamId = team.id}>
                 <TeamTable 
-                    teamType={team.type}
-                    teamMembers={teamMembers.filter(tm => tm.teamId === team.id)}
-                    rows={workItems}
+                    team={team}
+                    teamMembers={filteredMembers()}
+                    rows={filteredWorkItems()}
                     addRow={addRow}
                     saveRow={saveRow}
                     deleteRow={deleteRow}>
@@ -210,7 +245,7 @@
 </div>
 <Modal form bind:open={deleteRowModal} size="xs" class="pt-8 text-center" onaction={async ({ action }) => {
     if (action === 'success' && deleteRowIds?.length) {
-        deleteWorkItems();
+        await deleteWorkItems();
         deleteRowModal = false;
     } else if (action === 'decline') {
         deleteRowModal = false;

@@ -3,8 +3,8 @@
     import type { Team, TeamMember, TeamType, WorkItem } from '$lib/types';
     import EditableRow, { type Row } from "./EditableRow.svelte";
 
-    let { teamType, teamMembers, rows, addRow, saveRow, deleteRow } = $props<{
-        teamType: TeamType;
+    let { team, teamMembers, rows, addRow, saveRow, deleteRow } = $props<{
+        team: Team;
         teamMembers: TeamMember[];    
         rows: Row[];
         addRow: (date: string) => void;
@@ -17,7 +17,7 @@
 </script>
 
 <div class="max-h-[80vh] overflow-y-auto  w-[80vw] max-w-full table-fixed mx-auto">
-    <Card class="max-w-[100%] p-8">
+    <Card class="max-w-[100%] p-4 border-none">
         <div class="flex items-center sticky top-0 z-30 mb-2">
             <div class="flex gap-2 w-1/2 m-2">
                 <Input bind:value={newDate} type="date" class="flex-1" onkeydown={(e) => e.key === 'Enter' && addRow(newDate)}/>
@@ -41,7 +41,7 @@
                 </TableHeadCell>
             </TableHead>
             <TableBody>
-                {#each rows as row (row.date)}
+                {#each rows as row (team.id + '-' + row.date)}
                     <EditableRow 
                         teamMemberIds={teamMembers.map((members: TeamMember) => members.id)}
                         row={row}
