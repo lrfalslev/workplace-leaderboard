@@ -229,7 +229,7 @@
     });
 </script>
 
-<div class="max-w-full">
+<div class="max-w-full mb-8">
     <Tabs tabStyle="underline">
         {#each teams as team}
             <TabItem title={team.name} open={selectedTeamId === team.id} onclick={() => selectedTeamId = team.id}>
@@ -265,7 +265,6 @@
 <style>
   :global([role="tabpanel"]) {
     margin-top: 0 !important;
-    padding-top: 0 !important;
     border-top-left-radius: 0 !important;
   }
 </style>

@@ -17,15 +17,16 @@
         workItems?: string;
     };
 
-    let { team, teamMemberIds, row, saveRow, deleteRow, editing } = $props<{
+    let { team, teamMemberIds, row, saveRow, deleteRow, isNew } = $props<{
         team: Team;
         teamMemberIds: number[];
         row: Row;
         saveRow: (payload: WorkItem[]) => Promise<boolean>;
         deleteRow: (date: string, workItemIds: number[]) => void;
-        editing: boolean;
+        isNew: boolean;
     }>();
 
+    let isEditing = $state(isNew);
     let formInputs = $state<Record<string, WorkItemFormInput>>({});
     let errors = $state<Record<number, string>>({});
     
@@ -102,7 +103,7 @@
     }
       
     function toggleEditing() {
-        editing = !editing;
+        isEditing = !isEditing;
     }
 
     onMount(() => {
@@ -132,7 +133,7 @@
     {#each teamMemberIds as teamMemberId (teamMemberId)}
         {@const workItem = row.workItems[teamMemberId]}
         <TableBodyCell class="border dark:border-gray-700">
-            {#if editing}
+            {#if isEditing}
                 {#if formInputs[teamMemberId]}
                     <div class="relative flex justify-center items-center">
                         <div>
@@ -176,7 +177,7 @@
     {/each}
 
     <TableBodyCell class="flex justify-center items-center">
-        {#if editing}
+        {#if isEditing}
 
             <div class="flex flex-wrap justify-center gap-2 max-w-[200px] w-full">
                 <Button type="button" class="px-2 py-1 text-sm flex-1 min-w-[48%]" onclick={handleSave}>Save</Button>
