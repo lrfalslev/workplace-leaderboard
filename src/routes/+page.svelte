@@ -54,64 +54,81 @@
             intersect: false,
             followCursor: true,
             custom: ({ dataPointIndex, w }) => {
-                const row = summary[dataPointIndex];
-                const totalBonuses = row.totalTickets - row.totalWorkItemTickets;
-                
-                if (!isAdmin) {
-                        return `
-                            <div class="p-2 text-sm bg-white dark:bg-gray-800 dark:text-white rounded shadow">
-                                <strong>${row.teamMemberName}</strong>
-                                <hr class="my-1 border-gray-300 dark:border-gray-600"/>
-                                <div class="flex justify-between">
-                                    <span>Work Tickets:</span>
-                                    <span class="ml-3 text-right font-mono">${row.totalWorkItemTickets ?? 0}</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span>Bonuses:</span>
-                                    <span class="ml-3 text-right font-mono">${totalBonuses ?? 0}</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span>Total Tickets:</span>
-                                    <span class="ml-3 text-right font-mono">${row.totalTickets}</span>
-                                </div>
-                            </div>
-                        `;
-                    }
+                if (isAdmin)
+                    return getAdminTooltip(dataPointIndex);
 
-                const percentage = row.totalWorkItems > 0
-                    ? ((row.totalWorkItemTickets / row.totalWorkItems) * 100).toFixed(1)
-                    : '0.0';
-
-                return `
-                    <div class="p-2 text-sm bg-white dark:bg-gray-800 dark:text-white rounded shadow">
-                        <strong>${row.teamMemberName} (${percentage}%)</strong>
-                        <hr class="my-1 border-gray-300 dark:border-gray-600"/>
-                        <div class="flex justify-between">
-                            <span>First Time Approvals:</span>
-                            <span class="ml-3 text-right font-mono">${row.totalWorkItemTickets ?? 0}</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span>Topview Submissions:</span>
-                            <span class="ml-3 text-right font-mono">${row.totalWorkItems ?? 0}</span>
-                        </div>
-                        <hr class="my-1 border-gray-300 dark:border-gray-600"/>
-                        <div class="flex justify-between">
-                            <span>Work Tickets:</span>
-                            <span class="ml-3 text-right font-mono">${row.totalWorkItemTickets ?? 0}</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span>Bonus Tickets:</span>
-                            <span class="ml-3 text-right font-mono">${totalBonuses ?? 0}</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span>Total Tickets:</span>
-                            <span class="ml-3 text-right font-mono">${row.totalTickets ?? 0}</span>
-                        </div>
-                    </div>
-                `;
+                return getTooltip(dataPointIndex);
             }
         }
     };
+
+    function getTooltip(index: number) {
+        const row = summary[index];
+        const totalBonuses = row.totalTickets - row.totalWorkItemTickets;
+        return `
+            <div class="p-2 text-sm bg-white dark:bg-gray-700 dark:text-white rounded shadow">
+                <div class="text-center font-bold">${row.teamMemberName}</div>
+                <hr class="my-1 border-gray-300 dark:border-gray-600"/>
+                <div class="flex justify-between">
+                    <span>Work Tickets:</span>
+                    <span class="ml-3 text-right font-mono">${row.totalWorkItemTickets ?? 0}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span>Bonuses:</span>
+                    <span class="ml-3 text-right font-mono">${totalBonuses ?? 0}</span>
+                </div>
+                <div class="flex justify-between">
+                    <strong>Total:</strong>
+                    <strong class="ml-3 text-right font-mono">${row.totalTickets}</strong>
+                </div>
+            </div>
+        `;
+    }
+
+    function getAdminTooltip(index: number) {
+        const row = summary[index];
+        const totalBonuses = row.totalTickets - row.totalWorkItemTickets;
+        const percentage = row.totalWorkItems > 0
+            ? ((row.totalWorkItemTickets / row.totalWorkItems) * 100).toFixed(1)
+            : '0.0';
+        
+        const header = `
+            <div class="p-2 text-sm bg-white dark:bg-gray-700 dark:text-white rounded shadow">
+                <div class="text-center font-bold">${row.teamMemberName} (${percentage}%)</div>
+        `;
+        
+        const footer = `
+                <hr class="my-1 border-gray-300 dark:border-gray-600"/>
+                <div class="flex justify-between">
+                    <span>Work Tickets:</span>
+                    <span class="ml-3 text-right font-mono">${row.totalWorkItemTickets ?? 0}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span>Bonus Tickets:</span>
+                    <span class="ml-3 text-right font-mono">${totalBonuses ?? 0}</span>
+                </div>
+                <div class="flex justify-between">
+                    <strong>Total:</strong>
+                    <strong class="ml-3 text-right font-mono">${row.totalTickets}</strong>
+                </div>
+            </div>
+        `;
+        
+        if (row.teamName === "Project Management")
+            return header + `
+                <hr class="my-1 border-gray-300 dark:border-gray-600"/>
+                <div class="flex justify-between">
+                    <span>First Time Approvals:</span>
+                    <span class="ml-3 text-right font-mono">${row.totalWorkItemTickets ?? 0}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span>Topview Submissions:</span>
+                    <span class="ml-3 text-right font-mono">${row.totalWorkItems ?? 0}</span>
+                </div>
+            ` + footer;
+
+        return header + footer;
+    }
 
     function getUsersAcceptanceRate() {
         const teamMemberRow = summary.find(
