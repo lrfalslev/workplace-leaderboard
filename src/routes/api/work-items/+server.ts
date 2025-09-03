@@ -17,7 +17,7 @@ export const GET: RequestHandler = async function ({ platform }) {
 };
 
 export const POST: RequestHandler = async function ({ locals, request, platform }) {
-    if (!locals.user || locals.user.role !== UserRole.ADMIN) {
+    if (!locals.user || (locals.user.role !== UserRole.ADMIN && locals.user.role !== UserRole.MANAGER)) {
         return json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -75,7 +75,7 @@ export const POST: RequestHandler = async function ({ locals, request, platform 
 };
 
 export const DELETE: RequestHandler = async function ({ locals, request, platform }) {
-    if (!locals.user || locals.user.role !== UserRole.ADMIN) {
+    if (!locals.user || (locals.user.role !== UserRole.ADMIN && locals.user.role !== UserRole.MANAGER)) {
         return json({ error: 'Unauthorized' }, { status: 401 });
     }
 
