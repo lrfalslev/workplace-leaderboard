@@ -132,7 +132,7 @@
     
     {#each teamMemberIds as teamMemberId (teamMemberId)}
         {@const workItem = row.workItems[teamMemberId]}
-        <TableBodyCell class="border dark:border-gray-700">
+        <TableBodyCell class="border dark:border-gray-700 p-2">
             {#if isEditing}
                 {#if formInputs[teamMemberId]}
                     <div class="relative flex justify-center items-center">
@@ -155,7 +155,7 @@
                             {/if}
                         </div>
                         {#if errors[teamMemberId]}
-                            <ExclamationCircleSolid class="text-red-500 ml-2" />
+                            <ExclamationCircleSolid class="text-red-500 ml-1" />
                             <Tooltip>{errors[teamMemberId]}</Tooltip>
                         {/if}
                     </div>
@@ -178,10 +178,9 @@
 
     <TableBodyCell class="flex justify-center items-center">
         {#if isEditing}
-
-            <div class="flex flex-wrap justify-center gap-2 max-w-[200px] w-full">
-                <Button type="button" class="px-2 py-1 text-sm flex-1 min-w-[48%]" onclick={handleSave}>Save</Button>
-                <Button type="button" class="px-2 py-1 text-sm flex-1 min-w-[48%]" onclick={toggleEditing}>Cancel</Button>
+            <div class="flex flex-wrap justify-center gap-2 w-full">
+                <Button type="button" class="py-1 text-sm min-w-[60px]" onclick={handleSave}>Save</Button>
+                <Button type="button" class="py-1 text-sm min-w-[60px]" onclick={toggleEditing}>Cancel</Button>
             </div>
         {:else}
             <div>

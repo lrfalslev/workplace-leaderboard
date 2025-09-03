@@ -1,11 +1,12 @@
 <script lang="ts">
     import { onMount } from "svelte";
     import { Tabs, TabItem, Modal, Button } from "flowbite-svelte";
-    import type { WorkItem, TeamMember, Team } from '$lib/types';
+    import { type WorkItem, type TeamMember, type Team, UserRole } from '$lib/types';
     import { showAlert } from "$lib/stores/alert";
     import type { Row } from "./components/EditableRow.svelte";
     import TeamTable from "./components/TeamTable.svelte";
     import BonusTicketTable from "./components/BonusTicketTable.svelte";
+    import { user } from "$lib/stores/user";
     
     let teams = $state<Team[]>([]);
     let teamMembers = $state<TeamMember[]>([]);
@@ -58,7 +59,7 @@
 
     async function fetchTeams() {
         try {
-            const response = await fetch('/api/teams');
+            const response = await fetch('/api/manager/teams');
             if (!response.ok) 
                 throw new Error(`HTTP ${response.status}`);
             
@@ -76,7 +77,7 @@
 
     async function fetchTeamMembers() {
         try {
-            const response = await fetch('/api/team-members');
+            const response = await fetch('/api/manager/team-members');
 
             if (!response.ok) 
                 throw new Error(`HTTP ${response.status}`);
@@ -94,7 +95,7 @@
 
     async function fetchWorkItems() {
         try {
-            const response = await fetch('/api/work-items');
+            const response = await fetch('/api/manager/work-items');
 
             if (!response.ok) 
                 throw new Error(`HTTP ${response.status}`);
@@ -260,9 +261,11 @@
                     </TeamTable>
                 </TabItem>
             {/each}
-            <TabItem title="Bonus Tickets">
-                <BonusTicketTable teamMembers={teamMembers} />
-            </TabItem>
+            {#if $user && $user.role == UserRole.ADMIN}
+                <TabItem title="Bonus Tickets">
+                    <BonusTicketTable teamMembers={teamMembers} />
+                </TabItem>
+            {/if}
         </Tabs>
     </div>
 {/if}

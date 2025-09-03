@@ -50,6 +50,12 @@
     }
 
     async function handleAdd() {
+        const error = validateAddForm();
+        if (error) {
+            showAlert(error);
+            return;
+        }
+
         try {
             const payload = {
                 date: newDate,
@@ -76,7 +82,25 @@
         }
     }
 
+    function validateAddForm(): string | undefined {
+        if (!teamMemberId)
+            return 'Please select a team member.'
+
+        if (description.trim() === '')
+            return 'Description is required.';
+
+        const ticketsNum = Number(ticketsAwarded);
+        if (isNaN(ticketsNum) || ticketsNum <= 0) 
+            return 'Tickets must be a positive number.';
+    }
+
     async function handleSave(id: number) {
+        const error = validateForm(id);
+        if (error) {
+            showAlert(error);
+            return;
+        }
+
         try {
             const updatedTicket = await request<BonusTicket>('/api/tickets', {
                 method: 'PUT',
@@ -95,6 +119,17 @@
             console.error('Save failed:', err);
             showAlert('Could not save changes.');
         }
+    }
+    
+    function validateForm(id: number): string | undefined {
+        const { description, ticketsAwarded } = formInputs[id];
+        const ticketsNum = Number(ticketsAwarded);
+
+        if (description.trim() == '')
+            return 'Description is required.';
+
+        if (isNaN(ticketsNum) || ticketsNum <= 0)
+            return 'Tickets must be a positive number.';
     }
 
     async function handleDelete(id: number) {
@@ -126,7 +161,7 @@
     <div class="flex gap-2 mb-4 mr-12">
         <Input bind:value={newDate} type="date" class="flex-1" onkeydown={(e) => e.key === 'Enter' && handleAdd()}/>
 
-        <select bind:value={teamMemberId} class="custom-select">
+        <select bind:value={teamMemberId} class="custom-select" onkeydown={(e) => e.key === 'Enter' && handleAdd()}>
             <option value="" disabled selected>Team Member</option>
             {#each teamMembers as teamMember}
                 <option value={teamMember.id}>{teamMember.name}</option>
@@ -156,7 +191,9 @@
                 {#each tickets as ticket}
                     <TableBodyRow class="items-center">
                             {#if editingId === ticket.id}
-                                <TableBodyCell class="border dark:border-gray-700"><Input bind:value={formInputs[ticket.id].date} type="date" /></TableBodyCell>
+                                <TableBodyCell class="border dark:border-gray-700">
+                                    <Input bind:value={formInputs[ticket.id].date} type="date" onkeydown={(e) => e.key === 'Enter' && handleSave(ticket.id)} />
+                                </TableBodyCell>
                                 <TableBodyCell class="border dark:border-gray-700">
                                     <select bind:value={formInputs[ticket.id].teamMemberId} class="custom-select">
                                         <option value="" disabled>Team Member</option>
@@ -165,8 +202,12 @@
                                         {/each}
                                     </select>
                                 </TableBodyCell>
-                                <TableBodyCell class="border dark:border-gray-700"><Input bind:value={formInputs[ticket.id].description} type="text" /></TableBodyCell>
-                                <TableBodyCell class="border dark:border-gray-700"><Input bind:value={formInputs[ticket.id].ticketsAwarded} type="number" /></TableBodyCell>
+                                <TableBodyCell class="border dark:border-gray-700">
+                                    <Input bind:value={formInputs[ticket.id].description} type="text" onkeydown={(e) => e.key === 'Enter' && handleSave(ticket.id)} />
+                                </TableBodyCell>
+                                <TableBodyCell class="border dark:border-gray-700">
+                                    <Input bind:value={formInputs[ticket.id].ticketsAwarded} type="number" onkeydown={(e) => e.key === 'Enter' && handleSave(ticket.id)} />
+                                </TableBodyCell>
                                 <TableBodyCell class="border dark:border-gray-700">{$user?.username}</TableBodyCell>
                                 <TableBodyCell class="border dark:border-gray-700">
                                     <Button size="xs" onclick={() => handleSave(ticket.id)}>Save</Button>
