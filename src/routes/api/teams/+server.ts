@@ -11,11 +11,11 @@ export const POST: RequestHandler = async function ({ locals, request, platform 
         return json({ error: 'Unauthorized' }, { status: 401 });
     }
     
-    const { name, type } = await request.json() as { name: string, type: string };
+    const { name } = await request.json() as { name: string };
 
     try {
-        await platform?.env.DB.prepare('INSERT INTO teams (name, type) VALUES (?, ?)')
-            .bind(name, type)
+        await platform?.env.DB.prepare('INSERT INTO teams (name) VALUES (?)')
+            .bind(name)
             .run();
             
         const newTeam = await platform?.env.DB
@@ -34,11 +34,11 @@ export const PUT: RequestHandler = async function ({ locals, request, platform }
         return json({ error: 'Unauthorized' }, { status: 401 });
     }
     
-    const { teamId, name, type } = await request.json() as { teamId: number, name: string, type: string };
+    const { teamId, name } = await request.json() as { teamId: number, name: string };
 
     try {
-        await platform?.env.DB.prepare('UPDATE teams SET name = ?, type = ? WHERE id = ?')
-            .bind(name, type, teamId)
+        await platform?.env.DB.prepare('UPDATE teams SET name = ? WHERE id = ?')
+            .bind(name, teamId)
             .run();
             
         const updatedTeam = await platform?.env.DB

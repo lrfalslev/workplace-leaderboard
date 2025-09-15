@@ -1,7 +1,7 @@
 <script lang="ts">
     import { TableBodyRow, TableBodyCell, Input, Button, Tooltip } from "flowbite-svelte";
     import {  EditSolid, ExclamationCircleSolid, TrashBinSolid } from "flowbite-svelte-icons";
-    import { TeamType, type Team, type WorkItem } from '$lib/types';
+    import { WorkItemTypeType, type Team, type WorkItem } from '$lib/types';
     import { onMount } from "svelte";
 
     export type Row = {
@@ -50,7 +50,7 @@
                 continue;
             }
 
-            if (team.type === TeamType.TICKET_AND_TOTAL) {
+            if (team.type === WorkItemTypeType.TICKET_AND_TOTAL) {
                 const bothEmpty = !hasTickets && !hasTotal;
                 const bothFilled = hasTickets && hasTotal;
 
@@ -144,7 +144,7 @@
                                 size="sm"
                                 class="text-center mb-1"
                             />
-                            {#if team.type == TeamType.TICKET_AND_TOTAL}
+                            {#if team.type == WorkItemTypeType.TICKET_AND_TOTAL}
                                 <Input
                                     bind:value={formInputs[teamMemberId].workItems}
                                     placeholder="total"

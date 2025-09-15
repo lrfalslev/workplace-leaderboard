@@ -10,20 +10,19 @@ export const UserRoleLabels: Record<UserRole, string> = {
   [UserRole.MANAGER]: 'Manager'
 };
 
-export enum TeamType {
+export enum WorkItemTypeType {
   TICKET_AND_TOTAL = 'ticket_and_total',
   TICKET_ONLY = 'ticket_only'
 }
 
-export const TeamTypeLabels: Record<TeamType, string> = {
-  [TeamType.TICKET_AND_TOTAL]: 'Tickets And Totals',
-  [TeamType.TICKET_ONLY]: 'Tickets Only'
+export const WorkItemTypeTypeLabels: Record<WorkItemTypeType, string> = {
+  [WorkItemTypeType.TICKET_AND_TOTAL]: 'Tickets And Totals',
+  [WorkItemTypeType.TICKET_ONLY]: 'Tickets Only'
 };
 
 export type Team = {
     id: number;
     name: string;
-    type: TeamType;
 }
 
 export type TeamMember = {
@@ -39,6 +38,15 @@ export type User = {
     teamId: number | null;
     teamMemberId: number | null;
 };
+
+export type WorkItemType = {
+    id: number | null;
+    teamId: number;
+    ticketName: string;
+    workItemName: string;
+    type: WorkItemTypeType;
+    isLegacy: boolean;
+}
 
 export type WorkItem = {
     id: number | null;

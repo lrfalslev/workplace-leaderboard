@@ -9,10 +9,12 @@ export const GET: RequestHandler = async function ({ platform }) {
                 date,
                 tickets_awarded AS ticketsAwarded,
                 work_items AS workItems,
-                team_member_id AS teamMemberId
+                team_member_id AS teamMemberId,
+                work_item_type_id AS workItemTypeId,
             FROM work_items
         `)
         .all();
+        
     return json(queryResult?.results);
 };
 
@@ -26,6 +28,7 @@ export const POST: RequestHandler = async function ({ locals, request, platform 
         ticketsAwarded: number;
         workItems: number;
         teamMemberId: number;
+        workItemTypeId: number;
     }[];
 
     try {
@@ -35,13 +38,13 @@ export const POST: RequestHandler = async function ({ locals, request, platform 
             const formattedDate = new Date(workItem.date).toISOString().split('T')[0];
 
             await db?.prepare(`
-                INSERT INTO work_items (date, tickets_awarded, work_items, team_member_id)
-                VALUES (?, ?, ?, ?)
-                ON CONFLICT(date, team_member_id) DO UPDATE SET
+                INSERT INTO work_items (date, tickets_awarded, work_items, team_member_id, work_item_type_id)
+                VALUES (?, ?, ?, ?, ?)
+                ON CONFLICT(date, team_member_id, work_item_type_id) DO UPDATE SET
                     tickets_awarded = excluded.tickets_awarded,
                     work_items = excluded.work_items
             `)
-            .bind(formattedDate, workItem.ticketsAwarded, workItem.workItems, workItem.teamMemberId)
+            .bind(formattedDate, workItem.ticketsAwarded, workItem.workItems, workItem.teamMemberId, workItem.workItemTypeId)
             .run();
         }
 
@@ -56,11 +59,12 @@ export const POST: RequestHandler = async function ({ locals, request, platform 
                     date,
                     tickets_awarded AS ticketsAwarded,
                     work_items AS workItems,
-                    team_member_id AS teamMemberId
+                    team_member_id AS teamMemberId,
+                    work_item_type_id AS workItemTypeId
                 FROM work_items
-                WHERE date = ? AND team_member_id = ?
+                WHERE date = ? AND team_member_id = ? AND work_item_type_id = ?
             `)
-            .bind(formattedDate, workItem.teamMemberId)
+            .bind(formattedDate, workItem.teamMemberId, workItem.workItemTypeId)
             .first();
 
             if (item)

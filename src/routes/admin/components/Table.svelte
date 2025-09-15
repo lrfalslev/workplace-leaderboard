@@ -1,7 +1,7 @@
 <script lang="ts">
     import { Button, Modal } from 'flowbite-svelte';
     import { EditSolid, TrashBinSolid } from 'flowbite-svelte-icons';
-    import { UserRoleLabels, TeamTypeLabels, UserRole, TeamType } from '$lib/types';
+    import { UserRoleLabels, WorkItemTypeTypeLabels, UserRole, WorkItemTypeType } from '$lib/types';
     import { showAlert } from '$lib/stores/alert';
     import { CirclePlusSolid } from "flowbite-svelte-icons";
         
@@ -39,10 +39,13 @@
     let selectedTeam: number | null = $state(null);
     let selectedTeamMember: number | null = $state(null);
     let selectedName: string = $state('');
+    let selectedTicketName: string = $state('');
+    let selectedWorkItemName: string = $state('');
+    let selectedWorkItemType: WorkItemTypeType = $state(WorkItemTypeType.TICKET_ONLY);
+    let selectedWorkItemTypeTeam: number | null = $state(null);
     
     //creation fields
     let selectedTeamName: string = $state('');
-    let selectedTeamType: TeamType = $state(TeamType.TICKET_ONLY);
     let selectedTeamMemberName: string = $state('');
     let selectedTeamMemberTeam: string = $state('');
     
@@ -53,6 +56,10 @@
         selectedType = row.type ?? '';
         selectedTeam = row.teamId ?? null;
         selectedTeamMember = row.teamMemberId ?? null;
+        selectedTicketName = row.ticketName ?? '';
+        selectedWorkItemName = row.workItemName ?? '';
+        selectedWorkItemType = row.type ?? WorkItemTypeType.TICKET_ONLY;
+        selectedWorkItemTypeTeam = row.teamId ?? null;
         editModal = true;
     }
     function openDelete(row: any) { selected = row; deleteModal = true; }
@@ -68,7 +75,6 @@
                 }
                 payload = { 
                     name: selectedTeamName.trim(),
-                    type: selectedTeamType
                 }
                 break;
             case 'team-members':
@@ -82,6 +88,22 @@
                     teamId: teamId || null, 
                 };
                 break;
+            case 'work-item-types':
+                if (!selectedTicketName.trim()) {
+                    showAlert('Ticket name is required.');
+                    return;
+                }
+                if (!selectedWorkItemTypeTeam) {
+                    showAlert('Team is required.');
+                    return;
+                }
+                payload = {
+                    teamId: selectedWorkItemTypeTeam,
+                    ticketName: selectedTicketName.trim(),
+                    workItemName: selectedWorkItemName.trim(),
+                    type: selectedWorkItemType
+                };
+            break;
             default:
                 return;
         }
@@ -110,6 +132,11 @@
             selectedTeamName = '';
         } else if (resource === 'team-members') {
             selectedTeamMemberName = '';
+        } else if (resource === 'work-item-types') {
+            selectedTicketName = '';
+            selectedWorkItemName = '';
+            selectedWorkItemType = WorkItemTypeType.TICKET_ONLY;
+            selectedWorkItemTypeTeam = null;
         }
     }
 
@@ -153,6 +180,15 @@
                     teamMemberId: selectedTeamMember || null 
                 };
                 break;
+            case 'work-item-types':
+                payload = {
+                    id: selected.id,
+                    teamId: selectedWorkItemTypeTeam,
+                    ticketName: selectedTicketName.trim(),
+                    workItemName: selectedWorkItemName.trim(),
+                    type: selectedWorkItemType
+                };
+            break;
             default:
                 return;
         }
@@ -182,12 +218,6 @@
         onsubmit={addItem}>
         {#if resource === 'teams'}
             <input type="text" class="custom-input" placeholder="Team Name" bind:value={selectedTeamName} />
-            
-            <select bind:value={selectedTeamType} class="custom-select">
-            {#each Object.values(TeamType) as teamType}
-                <option value={teamType}>{TeamTypeLabels[teamType]}</option>
-            {/each}
-            </select>
         {:else}
             <select bind:value={selectedTeamMemberTeam} class="custom-select">
                 <option value="">No Team</option>
@@ -218,19 +248,23 @@
           <tbody class="dark:text-gray-400">
               {#each data as row}
               <tr>
-                  <td>{row.username || row.name}</td>
-                  {#if resource === 'users'}
-                      <td>{UserRoleLabels[row.role as keyof typeof UserRoleLabels] ?? '-'}</td>
-                  {/if}
-                  {#if (resource === 'users' || resource === 'team-members')}
-                      <td>{teams.find((team: RelatedItem) => team.id === row.teamId)?.name ?? '-'}</td>
-                  {/if}            
-                  {#if (resource === 'users')}
-                      <td>{teamMembers.find((teamMember: RelatedItem) => teamMember.id === row.teamMemberId)?.name ?? '-'}</td>
-                  {/if}        
-                  {#if (resource === 'teams')}
-                      <td>{TeamTypeLabels[row.type as keyof typeof TeamTypeLabels] ?? '-'}</td>
-                  {/if}
+                    {#if resource === 'work-item-types'}
+                        <td>{teams.find((team: RelatedItem) => team.id === row.teamId)?.name ?? '-'}</td>
+                        <td>{row.ticketName}</td>
+                        <td>{row.workItemName}</td>
+                        <td>{WorkItemTypeTypeLabels[row.type as keyof typeof WorkItemTypeTypeLabels] ?? '-'}</td>
+                    {:else}
+                        <td>{row.username || row.name}</td>
+                        {#if resource === 'users'}
+                            <td>{UserRoleLabels[row.role as keyof typeof UserRoleLabels] ?? '-'}</td>
+                        {/if}
+                        {#if (resource === 'users' || resource === 'team-members')}
+                            <td>{teams.find((team: RelatedItem) => team.id === row.teamId)?.name ?? '-'}</td>
+                        {/if}            
+                        {#if (resource === 'users')}
+                            <td>{teamMembers.find((teamMember: RelatedItem) => teamMember.id === row.teamMemberId)?.name ?? '-'}</td>
+                        {/if}
+                    {/if}
                   <td>
                     <button onclick={() => openEdit(row)}>
                         <EditSolid class="dark:text-gray-400 dark:hover:text-white"/>
@@ -275,12 +309,6 @@
         {/if}
     {:else if resource === 'teams' }
         <input type="text" bind:value={selectedName} placeholder="Name" class="custom-input" />
-        
-        <select bind:value={selectedType} class="custom-select">
-        {#each Object.values(TeamType) as teamType}
-            <option value={teamType}>{TeamTypeLabels[teamType]}</option>
-        {/each}
-        </select>
     {:else if resource === 'team-members'}
         <input type="text" bind:value={selectedName} placeholder="Name" class="custom-input" />
 
@@ -288,6 +316,20 @@
             <option value="">No Team</option>
             {#each teams as team}
                 <option value={team.id}>{team.name}</option>
+            {/each}
+        </select>
+    {:else if resource === 'work-item-types'}
+        <select bind:value={selectedWorkItemTypeTeam} class="custom-select">
+            <option value="">Select Team</option>
+            {#each teams as team}
+                <option value={team.id}>{team.name}</option>
+            {/each}
+        </select>
+        <input type="text" bind:value={selectedTicketName} placeholder="Ticket Name" class="custom-input" />
+        <input type="text" bind:value={selectedWorkItemName} placeholder="Work Item Name" class="custom-input" />
+        <select bind:value={selectedWorkItemType} class="custom-select">
+            {#each Object.values(WorkItemTypeType) as workItemType}
+                <option value={workItemType}>{WorkItemTypeTypeLabels[workItemType]}</option>
             {/each}
         </select>
     {/if}
