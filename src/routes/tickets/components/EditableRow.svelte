@@ -1,33 +1,37 @@
 <script lang="ts">
     import { TableBodyRow, TableBodyCell, Input, Button, Tooltip } from "flowbite-svelte";
-    import {  EditSolid, ExclamationCircleSolid, TrashBinSolid } from "flowbite-svelte-icons";
-    import { WorkItemTypeType, type Team, type WorkItem } from '$lib/types';
+    import { EditSolid, ExclamationCircleSolid, TrashBinSolid } from "flowbite-svelte-icons";
+    import { MetricType, type Team, type Log } from '$lib/types';
     import { onMount } from "svelte";
 
     export type Row = {
         date: string;
-        workItems: Record<number, WorkItem>;
+        logs: Record<number, Log>;
     }
 
-    type WorkItemFormInput = {
+    type LogFormInput = {
         id: number | null;
         date: string;
         teamMemberId: number;
-        ticketsAwarded: string;
-        workItems?: string;
+        metricId: number;
+        qualifiedWorkItems: string;
+        totalWorkItems?: string;
+        metricType: MetricType;
+        qualifiedWorkLabel: string;
+        totalWorkLabel?: string | null;
     };
 
     let { team, teamMemberIds, row, saveRow, deleteRow, isNew } = $props<{
         team: Team;
         teamMemberIds: number[];
         row: Row;
-        saveRow: (payload: WorkItem[]) => Promise<boolean>;
-        deleteRow: (date: string, workItemIds: number[]) => void;
+        saveRow: (payload: Log[]) => Promise<boolean>;
+        deleteRow: (date: string, logIds: number[]) => void;
         isNew: boolean;
     }>();
 
     let isEditing = $state(isNew);
-    let formInputs = $state<Record<string, WorkItemFormInput>>({});
+    let formInputs = $state<Record<string, LogFormInput>>({});
     let errors = $state<Record<number, string>>({});
     
     function validateForm(): boolean {
@@ -35,9 +39,9 @@
         const newErrors: Record<number, string> = {};
 
         for (const input of Object.values(formInputs)) {
-            const { teamMemberId, ticketsAwarded, workItems } = input;
-            const tickets = ticketsAwarded.trim();
-            const total = workItems?.trim();
+            const { teamMemberId, metricType, qualifiedWorkItems, totalWorkItems } = input;
+            const tickets = qualifiedWorkItems.trim();
+            const total = totalWorkItems?.trim();
 
             const hasTickets = tickets !== '';
             const hasTotal = total !== '';
@@ -50,7 +54,7 @@
                 continue;
             }
 
-            if (team.type === WorkItemTypeType.TICKET_AND_TOTAL) {
+            if (metricType === MetricType.TICKET_AND_TOTAL) {
                 const bothEmpty = !hasTickets && !hasTotal;
                 const bothFilled = hasTickets && hasTotal;
 
@@ -82,14 +86,19 @@
         if (!validateForm()) 
             return;
 
-        const payload: WorkItem[] = Object.values(formInputs)
-            .filter(item => item.ticketsAwarded !== '')
+        const payload: Log[] = Object.values(formInputs)
+            .filter(item => item.qualifiedWorkItems !== '')
             .map(item => ({
                 id: item.id,
                 date: item.date,
                 teamMemberId: item.teamMemberId,
-                ticketsAwarded: Number(item.ticketsAwarded),
-                workItems: item.workItems === '' ? null : Number(item.workItems)
+                metricId: item.metricId,
+                qualifiedWorkItems: Number(item.qualifiedWorkItems),
+                totalWorkItems: item.totalWorkItems === '' ? null : Number(item.totalWorkItems),
+                qualifiedWorkLabel: item.qualifiedWorkLabel,
+                totalWorkLabel: item.totalWorkLabel || null,
+                isLegacy: false,
+                metricType: team.type
             }));
 
         const success = await saveRow(payload);
@@ -98,8 +107,8 @@
     }
 
     function handleDelete() {
-        const workItemIds = (Object.values(row.workItems) as WorkItem[]).map(item => item.id);
-        deleteRow(row.date, team.name, workItemIds);
+        const logIds = (Object.values(row.logs) as Log[]).map(item => item.id);
+        deleteRow(row.date, team.name, logIds);
     }
       
     function toggleEditing() {
@@ -107,20 +116,20 @@
     }
 
     onMount(() => {
-        const initialInputs: Record<string, WorkItemFormInput> = {};
+        const initialInputs: Record<string, LogFormInput> = {};
         for (const teamMemberId of teamMemberIds) {
-            const existing = row.workItems[teamMemberId];
+            const existing = row.logs[teamMemberId];
             initialInputs[teamMemberId] = existing
                 ? {
                     ...existing,
-                    ticketsAwarded: existing.ticketsAwarded != null ? String(existing.ticketsAwarded) : '',
-                    workItems: existing.workItems != null ? String(existing.workItems) : ''
+                    qualifiedWorkItems: existing.qualifiedWorkItems != null ? String(existing.qualifiedWorkItems) : '',
+                    totalWorkItems: existing.totalWorkItems != null ? String(existing.totalWorkItems) : ''
                 }
                 : {
                     date: row.date,
                     teamMemberId,
-                    ticketsAwarded: '',
-                    workItems: ''
+                    qualifiedWorkItems: '',
+                    totalWorkItems: ''
                 };
         }
         formInputs = initialInputs;
@@ -131,24 +140,24 @@
     <TableBodyCell class="px-2 text-center">{row.date}</TableBodyCell>
     
     {#each teamMemberIds as teamMemberId (teamMemberId)}
-        {@const workItem = row.workItems[teamMemberId]}
+        {@const log = row.logs[teamMemberId]}
         <TableBodyCell class="border dark:border-gray-700 p-2">
             {#if isEditing}
                 {#if formInputs[teamMemberId]}
                     <div class="relative flex justify-center items-center">
                         <div>
                             <Input
-                                bind:value={formInputs[teamMemberId].ticketsAwarded}
-                                placeholder="tickets"
-                                title="Ticket Awarded Work Items" 
+                                bind:value={formInputs[teamMemberId].qualifiedWorkItems}
+                                placeholder={formInputs[teamMemberId].qualifiedWorkLabel}
+                                title={formInputs[teamMemberId].qualifiedWorkLabel}
                                 size="sm"
                                 class="text-center mb-1"
                             />
-                            {#if team.type == WorkItemTypeType.TICKET_AND_TOTAL}
+                            {#if formInputs[teamMemberId].metricType == MetricType.TICKET_AND_TOTAL}
                                 <Input
-                                    bind:value={formInputs[teamMemberId].workItems}
-                                    placeholder="total"
-                                    title="Total Work Items Submitted" 
+                                    bind:value={formInputs[teamMemberId].totalWorkItems}
+                                    placeholder={formInputs[teamMemberId].totalWorkLabel || 'Total'}
+                                    title={formInputs[teamMemberId].totalWorkLabel || 'Total Work Items'} 
                                     size="sm"
                                     class="text-center mt-1"
                                 />
@@ -163,14 +172,14 @@
                     <span class="text-sm text-gray-400">Loading...</span>
                 {/if}
             {:else}
-                {#if workItem == null || workItem.ticketsAwarded == null || workItem.ticketsAwarded === ""}
+                {#if log == null || log.qualifiedWorkItems == null || log.qualifiedWorkItems === ""}
                     -
-                {:else if workItem.workItems == null}
-                    {workItem.ticketsAwarded}
-                {:else if workItem.workItems === 0}
+                {:else if log.metricType === MetricType.TICKET_ONLY}
+                    {log.qualifiedWorkItems}
+                {:else if log.totalWorkItems === 0}
                     0
                 {:else}
-                    {workItem.ticketsAwarded}/{workItem.workItems}
+                    {log.qualifiedWorkItems}/{log.totalWorkItems}
                 {/if}
             {/if}
         </TableBodyCell>

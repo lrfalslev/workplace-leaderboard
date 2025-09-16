@@ -1,6 +1,6 @@
 <script lang="ts">
     import { Input, Button, Card, Table, TableHead, TableHeadCell, TableBody } from "flowbite-svelte";
-    import type { Team, TeamMember, WorkItem } from '$lib/types';
+    import type { Team, TeamMember, Log } from '$lib/types';
     import EditableRow, { type Row } from "./EditableRow.svelte";
     import { CirclePlusSolid } from "flowbite-svelte-icons";
 
@@ -9,8 +9,8 @@
         teamMembers: TeamMember[];    
         rows: Row[];
         addRow: (date: string) => void;
-        saveRow: (payload: WorkItem[]) => Promise<boolean>;
-        deleteRow: (date: string, teamName: string, workItemIds: number[]) => void;
+        saveRow: (payload: Log[]) => Promise<boolean>;
+        deleteRow: (date: string, teamName: string, logIds: number[]) => void;
         newlyAddedDate: string | null;
     }>();
 

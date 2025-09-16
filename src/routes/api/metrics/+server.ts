@@ -1,4 +1,4 @@
-import { WorkItemTypeType, UserRole } from '$lib/types';
+import { MetricType, UserRole } from '$lib/types';
 import { json, type RequestHandler } from '@sveltejs/kit';
 
 export const GET: RequestHandler = async function ({ platform }) {
@@ -7,11 +7,11 @@ export const GET: RequestHandler = async function ({ platform }) {
             SELECT 
                 id,
                 team_id AS teamId,
-                ticket_name AS ticketName,
-                work_item_name AS workItemName,
                 type,
+                qualified_work_label AS qualifiedWorkLabel,
+                total_work_label AS totalWorkLabel,
                 is_legacy AS isLegacy
-            FROM work_item_types
+            FROM metrics
         `)
         .all();
 
@@ -23,39 +23,39 @@ export const POST: RequestHandler = async function ({ locals, request, platform 
         return json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { teamId, ticketName, workItemName, type, isLegacy } = await request.json() as {
+    const { teamId, type, qualifiedWorkLabel, totalWorkLabel, isLegacy } = await request.json() as {
         teamId: number;
-        ticketName: string;
-        workItemName?: string;
-        type: WorkItemTypeType;
+        type: MetricType;
+        qualifiedWorkLabel: string;
+        totalWorkLabel?: string;
         isLegacy?: boolean;
     };
 
     try {
         await platform?.env.DB.prepare(`
-            INSERT INTO work_item_types (team_id, ticket_name, work_item_name, type, is_legacy)
+            INSERT INTO metrics (team_id, type, qualified_work_label, total_work_label, is_legacy)
             VALUES (?, ?, ?, ?, ?)
         `)
-        .bind(teamId, ticketName, workItemName ?? null, type, isLegacy ? 1 : 0)
+        .bind(teamId, type, qualifiedWorkLabel, totalWorkLabel ?? null, isLegacy ? 1 : 0)
         .run();
 
-        const newItem = await platform?.env.DB
+        const newMetric = await platform?.env.DB
             .prepare(`
                 SELECT 
                     id,
                     team_id AS teamId,
-                    ticket_name AS ticketName,
-                    work_item_name AS workItemName,
                     type,
+                    qualified_work_label AS qualifiedWorkLabel,
+                    total_work_label AS totalWorkLabel,
                     is_legacy AS isLegacy
-                FROM work_item_types
+                FROM metrics
                 WHERE id = last_insert_rowid()
             `)
             .first();
 
-        return json(newItem);
+        return json(newMetric);
     } catch (err) {
-        console.error('Failed to insert workItemType: ', err);
+        console.error('Failed to insert metric: ', err);
         return new Response('Internal Error', { status: 500 });
     }
 };
@@ -65,42 +65,42 @@ export const PUT: RequestHandler = async function ({ locals, request, platform }
         return json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id, teamId, ticketName, workItemName, type, isLegacy } = await request.json() as {
+    const { id, teamId, type, qualifiedWorkLabel, totalWorkLabel, isLegacy } = await request.json() as {
         id: number;
         teamId: number;
-        ticketName: string;
-        workItemName?: string;
-        type: WorkItemTypeType;
+        type: MetricType;
+        qualifiedWorkLabel: string;
+        totalWorkLabel?: string;
         isLegacy?: boolean;
     };
 
     try {
         await platform?.env.DB.prepare(`
-            UPDATE work_item_types
-            SET team_id = ?, ticket_name = ?, work_item_name = ?, type = ?, is_legacy = ?
+            UPDATE metrics
+            SET team_id = ?, type = ?, qualified_work_label = ?, total_work_label = ?, is_legacy = ?
             WHERE id = ?
         `)
-        .bind(teamId, ticketName, workItemName ?? null, type, isLegacy ? 1 : 0, id)
+        .bind(teamId, type, qualifiedWorkLabel, totalWorkLabel ?? null, isLegacy ? 1 : 0, id)
         .run();
 
-        const updatedItem = await platform?.env.DB
+        const updatedMetric = await platform?.env.DB
             .prepare(`
                 SELECT 
                     id,
                     team_id AS teamId,
-                    ticket_name AS ticketName,
-                    work_item_name AS workItemName,
                     type,
+                    qualified_work_label AS qualifiedWorkLabel,
+                    total_work_label AS totalWorkLabel,
                     is_legacy AS isLegacy
-                FROM work_item_types
+                FROM metrics
                 WHERE id = ?
             `)
             .bind(id)
             .first();
 
-        return json(updatedItem);
+        return json(updatedMetric);
     } catch (err) {
-        console.error('Failed to update work_item_type: ', err);
+        console.error('Failed to update metric: ', err);
         return new Response('Internal Error', { status: 500 });
     }
 };
@@ -118,14 +118,14 @@ export const DELETE: RequestHandler = async function ({ locals, url, platform })
 
     try {
         const result = await platform?.env.DB.prepare(`
-            DELETE FROM work_item_types WHERE id = ?
+            DELETE FROM metrics WHERE id = ?
         `)
         .bind(id)
         .run();
 
         return json({ success: true, deleted: result?.meta.changed_db });
     } catch (err) {
-        console.error('Failed to delete work_item_type: ', err);
+        console.error('Failed to delete metric: ', err);
         return new Response('Internal Error', { status: 500 });
     }
 };

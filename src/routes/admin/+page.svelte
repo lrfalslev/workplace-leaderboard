@@ -1,12 +1,12 @@
 <script lang="ts">
     import { onMount } from 'svelte';
     import Table from './components/Table.svelte';
-    import type { Team, TeamMember, User, WorkItemType } from '$lib/types';
+    import type { Team, TeamMember, User, Metric } from '$lib/types';
 
     let teams: Team[] = $state([]);
     let teamMembers: TeamMember[] = $state([]);
     let users: User[] = $state([]);
-    let workItemTypes: WorkItemType[] = $state([]); // Add state
+    let metrics: Metric[] = $state([]);
 
     let isLoading = $state(true);
 
@@ -14,7 +14,7 @@
     const teamColumns = ['Team Name', 'Edit'];
     const teamMemberColumns = ['Name', 'Team', 'Edit'];
     const userColumns = ['Username', 'Role', 'Team', 'Team Member', 'Edit'];
-    const workItemTypeColumns = ['Team', 'Ticket Name', 'Work Item Name', 'Type', 'Edit'];
+    const metricColumns = ['Team', 'Type', 'Qualified Work Items', 'Total Work Items', 'Edit'];
 
     async function fetchTeams() {
         try {
@@ -61,19 +61,19 @@
         }
     }
 
-    async function fetchWorkItemTypes() {
+    async function fetchmetrics() {
       try {
-          const response = await fetch('/api/work-item-types');
-          console.log('Fetched work item types: ', response);
+          const response = await fetch('/api/metrics');
           const data = await response.json();
+          console.log('Fetched metrics: ', data);
 
           if (response.ok && Array.isArray(data)) {
-              workItemTypes = data;
+              metrics = data;
           } else {
               console.error('Unexpected response format: ', data);
           }
       } catch (err) {
-          console.error('Failed to fetch work item types: ', err);
+          console.error('Failed to fetch metrics: ', err);
       }
     }
 
@@ -82,8 +82,8 @@
         teams = sortTeams([...teams, newItem]);
       } else if (resource === 'team-members') {
         teamMembers = sortTeamMembers([...teamMembers, newItem]);
-      } else if (resource === 'work_item_types') {
-        workItemTypes = [...workItemTypes, newItem];
+      } else if (resource === 'metrics') {
+        metrics = [...metrics, newItem];
       }
     }
 
@@ -94,8 +94,8 @@
         teamMembers = sortTeamMembers(teamMembers.filter(member => member.id !== id));
       } else if (resource === 'users') {
         users = sortUsers(users.filter(user => user.id !== id));
-      } else if (resource === 'work_item_types') {
-        workItemTypes = workItemTypes.filter(item => item.id !== id);
+      } else if (resource === 'metrics') {
+        metrics = metrics.filter(item => item.id !== id);
       }
     }
     
@@ -112,8 +112,8 @@
         users = sortUsers(users.map(user =>
           user.id === updatedItem.id ? updatedItem : user
         ));
-      } else if (resource === 'work_item_types') {
-        workItemTypes = workItemTypes.map(item =>
+      } else if (resource === 'metrics') {
+        metrics = metrics.map(item =>
             item.id === updatedItem.id ? updatedItem : item
         );
       }
@@ -142,7 +142,7 @@
                 fetchTeams(),
                 fetchTeamMembers(),
                 fetchUsers(),
-                fetchWorkItemTypes()
+                fetchmetrics()
             ]);
         } catch (err) {
             console.error('Initial data load failed:', err);
@@ -185,11 +185,11 @@
     </section>
   
     <section class="m-2 p-4 bg-gray-800 rounded-lg shadow-md">
-      <h2 class="text-xl font-bold mb-4 dark:text-gray-200 text-center">Work Item Types</h2>
+      <h2 class="text-xl font-bold mb-4 dark:text-gray-200 text-center">Metrics</h2>
       <Table
-        columns={workItemTypeColumns}
-        data={workItemTypes}
-        resource="work-item-types"
+        columns={metricColumns}
+        data={metrics}
+        resource="metrics"
         teams={teams}
         onAdd={handleAdd}
         onDelete={handleDelete}

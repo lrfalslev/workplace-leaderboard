@@ -28,7 +28,7 @@
 
     async function fetchBonusTickets() {
         try {
-            const response = await fetch('/api/tickets');
+            const response = await fetch('/api/bonus-tickets');
 
             if (!response.ok) 
                 throw new Error(`HTTP ${response.status}`);
@@ -65,7 +65,7 @@
                 managerId: $user?.id
             };
 
-            const newTicket = await request<BonusTicket>('/api/tickets', {
+            const newTicket = await request<BonusTicket>('/api/bonus-tickets', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
@@ -102,7 +102,7 @@
         }
 
         try {
-            const updatedTicket = await request<BonusTicket>('/api/tickets', {
+            const updatedTicket = await request<BonusTicket>('/api/bonus-tickets', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formInputs[id])
@@ -134,7 +134,7 @@
 
     async function handleDelete(id: number) {
         try {
-            await request('/api/tickets?id=' + id, { method: 'DELETE' });
+            await request('/api/bonus-tickets?id=' + id, { method: 'DELETE' });
             tickets = tickets.filter(ticket => ticket.id !== id);
         } catch (err) {
             console.error('Delete failed:', err);

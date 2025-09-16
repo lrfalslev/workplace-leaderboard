@@ -148,7 +148,7 @@
 
     onMount(async () => {
         try {
-            const response = await fetch('/api/tickets/summary');
+            const response = await fetch('/api/ticket-summary');
             const json: SummaryRow[] = await response.json();
 
             if (!response.ok || !Array.isArray(json)) 

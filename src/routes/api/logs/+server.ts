@@ -7,11 +7,11 @@ export const GET: RequestHandler = async function ({ platform }) {
             SELECT 
                 id,
                 date,
-                tickets_awarded AS ticketsAwarded,
-                work_items AS workItems,
                 team_member_id AS teamMemberId,
-                work_item_type_id AS workItemTypeId,
-            FROM work_items
+                metric_id AS metricId,
+                qualified_work_items AS qualifiedWorkItems,
+                total_work_items AS totalWorkItems,
+            FROM logs
         `)
         .all();
         
@@ -25,10 +25,10 @@ export const POST: RequestHandler = async function ({ locals, request, platform 
 
     const workItems = await request.json() as {
         date: string;
-        ticketsAwarded: number;
-        workItems: number;
         teamMemberId: number;
-        workItemTypeId: number;
+        metricId: number;
+        qualifiedWorkItems: number;
+        totalWorkItems: number;
     }[];
 
     try {
@@ -38,13 +38,13 @@ export const POST: RequestHandler = async function ({ locals, request, platform 
             const formattedDate = new Date(workItem.date).toISOString().split('T')[0];
 
             await db?.prepare(`
-                INSERT INTO work_items (date, tickets_awarded, work_items, team_member_id, work_item_type_id)
+                INSERT INTO logs (date, team_member_id, metric_id, qualified_work_items, total_work_items)
                 VALUES (?, ?, ?, ?, ?)
-                ON CONFLICT(date, team_member_id, work_item_type_id) DO UPDATE SET
-                    tickets_awarded = excluded.tickets_awarded,
-                    work_items = excluded.work_items
+                ON CONFLICT(date, team_member_id, metric_id) DO UPDATE SET
+                    qualified_work_items = excluded.qualified_work_items,
+                    total_work_items = excluded.total_work_items
             `)
-            .bind(formattedDate, workItem.ticketsAwarded, workItem.workItems, workItem.teamMemberId, workItem.workItemTypeId)
+            .bind(formattedDate, workItem.teamMemberId, workItem.metricId, workItem.qualifiedWorkItems, workItem.totalWorkItems)
             .run();
         }
 
@@ -57,14 +57,14 @@ export const POST: RequestHandler = async function ({ locals, request, platform 
                 SELECT 
                     id,
                     date,
-                    tickets_awarded AS ticketsAwarded,
-                    work_items AS workItems,
                     team_member_id AS teamMemberId,
-                    work_item_type_id AS workItemTypeId
-                FROM work_items
-                WHERE date = ? AND team_member_id = ? AND work_item_type_id = ?
+                    metric_id AS metricId,
+                    qualified_work_items AS qualifiedWorkItems,
+                    total_work_items AS totalWorkItems
+                FROM logs
+                WHERE date = ? AND team_member_id = ? AND metric_id = ?
             `)
-            .bind(formattedDate, workItem.teamMemberId, workItem.workItemTypeId)
+            .bind(formattedDate, workItem.teamMemberId, workItem.metricId)
             .first();
 
             if (item)
@@ -73,7 +73,7 @@ export const POST: RequestHandler = async function ({ locals, request, platform 
 
         return json(updatedItems);
     } catch (err) {
-        console.error('Failed to upsert workItems: ', err);
+        console.error('Failed to upsert logs: ', err);
         return new Response('Internal Error', { status: 500 });
     }
 };
@@ -83,21 +83,21 @@ export const DELETE: RequestHandler = async function ({ locals, request, platfor
         return json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { workItemIds } = await request.json() as { workItemIds: number[] };
+    const { workTicketIds } = await request.json() as { workTicketIds: number[] };
 
-    if (!Array.isArray(workItemIds) || workItemIds.length === 0) {
+    if (!Array.isArray(workTicketIds) || workTicketIds.length === 0) {
         return json({ error: 'No IDs provided' }, { status: 400 });
     }
 
     try {
-        const placeholders = workItemIds.map(() => '?').join(', ');
-        const result = await platform?.env.DB.prepare(`DELETE FROM work_items WHERE id IN (${placeholders})`)
-            .bind(...workItemIds)
+        const placeholders = workTicketIds.map(() => '?').join(', ');
+        const result = await platform?.env.DB.prepare(`DELETE FROM logs WHERE id IN (${placeholders})`)
+            .bind(...workTicketIds)
             .run();
 
         return json({ success: true, deleted: result?.meta.changed_db });
     } catch (err) {
-        console.error('Failed to delete topviews: ', err);
+        console.error('Failed to delete logs: ', err);
         return new Response('Internal Error', { status: 500 });
     }
 };

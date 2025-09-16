@@ -1,7 +1,7 @@
 <script lang="ts">
     import { Button, Modal } from 'flowbite-svelte';
     import { EditSolid, TrashBinSolid } from 'flowbite-svelte-icons';
-    import { UserRoleLabels, WorkItemTypeTypeLabels, UserRole, WorkItemTypeType } from '$lib/types';
+    import { UserRoleLabels, MetricTypeLabels, UserRole, MetricType } from '$lib/types';
     import { showAlert } from '$lib/stores/alert';
     import { CirclePlusSolid } from "flowbite-svelte-icons";
         
@@ -39,10 +39,10 @@
     let selectedTeam: number | null = $state(null);
     let selectedTeamMember: number | null = $state(null);
     let selectedName: string = $state('');
-    let selectedTicketName: string = $state('');
-    let selectedWorkItemName: string = $state('');
-    let selectedWorkItemType: WorkItemTypeType = $state(WorkItemTypeType.TICKET_ONLY);
-    let selectedWorkItemTypeTeam: number | null = $state(null);
+    let selectedQualifiedWorkLabel: string = $state('');
+    let selectedTotalWorkLabel: string = $state('');
+    let selectedMetric: MetricType = $state(MetricType.TICKET_ONLY);
+    let selectedMetricTeam: number | null = $state(null);
     
     //creation fields
     let selectedTeamName: string = $state('');
@@ -56,10 +56,10 @@
         selectedType = row.type ?? '';
         selectedTeam = row.teamId ?? null;
         selectedTeamMember = row.teamMemberId ?? null;
-        selectedTicketName = row.ticketName ?? '';
-        selectedWorkItemName = row.workItemName ?? '';
-        selectedWorkItemType = row.type ?? WorkItemTypeType.TICKET_ONLY;
-        selectedWorkItemTypeTeam = row.teamId ?? null;
+        selectedQualifiedWorkLabel = row.qualifiedWorkLabel ?? '';
+        selectedTotalWorkLabel = row.totalWorkLabel ?? '';
+        selectedMetric = row.type ?? MetricType.TICKET_ONLY;
+        selectedMetricTeam = row.teamId ?? null;
         editModal = true;
     }
     function openDelete(row: any) { selected = row; deleteModal = true; }
@@ -88,20 +88,20 @@
                     teamId: teamId || null, 
                 };
                 break;
-            case 'work-item-types':
-                if (!selectedTicketName.trim()) {
+            case 'metrics':
+                if (!selectedQualifiedWorkLabel.trim()) {
                     showAlert('Ticket name is required.');
                     return;
                 }
-                if (!selectedWorkItemTypeTeam) {
+                if (!selectedMetricTeam) {
                     showAlert('Team is required.');
                     return;
                 }
                 payload = {
-                    teamId: selectedWorkItemTypeTeam,
-                    ticketName: selectedTicketName.trim(),
-                    workItemName: selectedWorkItemName.trim(),
-                    type: selectedWorkItemType
+                    teamId: selectedMetricTeam,
+                    qualifiedWorkLabel: selectedQualifiedWorkLabel.trim(),
+                    totalWorkLabel: selectedTotalWorkLabel.trim(),
+                    type: selectedMetric
                 };
             break;
             default:
@@ -132,11 +132,11 @@
             selectedTeamName = '';
         } else if (resource === 'team-members') {
             selectedTeamMemberName = '';
-        } else if (resource === 'work-item-types') {
-            selectedTicketName = '';
-            selectedWorkItemName = '';
-            selectedWorkItemType = WorkItemTypeType.TICKET_ONLY;
-            selectedWorkItemTypeTeam = null;
+        } else if (resource === 'metrics') {
+            selectedQualifiedWorkLabel = '';
+            selectedTotalWorkLabel = '';
+            selectedMetric = MetricType.TICKET_ONLY;
+            selectedMetricTeam = null;
         }
     }
 
@@ -180,13 +180,13 @@
                     teamMemberId: selectedTeamMember || null 
                 };
                 break;
-            case 'work-item-types':
+            case 'metrics':
                 payload = {
                     id: selected.id,
-                    teamId: selectedWorkItemTypeTeam,
-                    ticketName: selectedTicketName.trim(),
-                    workItemName: selectedWorkItemName.trim(),
-                    type: selectedWorkItemType
+                    teamId: selectedMetricTeam,
+                    qualifiedWorkLabel: selectedQualifiedWorkLabel.trim(),
+                    totalWorkLabel: selectedTotalWorkLabel.trim(),
+                    type: selectedMetric
                 };
             break;
             default:
@@ -248,11 +248,11 @@
           <tbody class="dark:text-gray-400">
               {#each data as row}
               <tr>
-                    {#if resource === 'work-item-types'}
+                    {#if resource === 'metrics'}
                         <td>{teams.find((team: RelatedItem) => team.id === row.teamId)?.name ?? '-'}</td>
-                        <td>{row.ticketName}</td>
-                        <td>{row.workItemName}</td>
-                        <td>{WorkItemTypeTypeLabels[row.type as keyof typeof WorkItemTypeTypeLabels] ?? '-'}</td>
+                        <td>{MetricTypeLabels[row.type as keyof typeof MetricTypeLabels] ?? '-'}</td>
+                        <td>{row.qualifiedWorkLabel}</td>
+                        <td>{row.totalWorkLabel ?? '-'}</td>
                     {:else}
                         <td>{row.username || row.name}</td>
                         {#if resource === 'users'}
@@ -318,18 +318,18 @@
                 <option value={team.id}>{team.name}</option>
             {/each}
         </select>
-    {:else if resource === 'work-item-types'}
-        <select bind:value={selectedWorkItemTypeTeam} class="custom-select">
+    {:else if resource === 'metrics'}
+        <select bind:value={selectedMetricTeam} class="custom-select">
             <option value="">Select Team</option>
             {#each teams as team}
                 <option value={team.id}>{team.name}</option>
             {/each}
         </select>
-        <input type="text" bind:value={selectedTicketName} placeholder="Ticket Name" class="custom-input" />
-        <input type="text" bind:value={selectedWorkItemName} placeholder="Work Item Name" class="custom-input" />
-        <select bind:value={selectedWorkItemType} class="custom-select">
-            {#each Object.values(WorkItemTypeType) as workItemType}
-                <option value={workItemType}>{WorkItemTypeTypeLabels[workItemType]}</option>
+        <input type="text" bind:value={selectedQualifiedWorkLabel} placeholder="Qualified Work Items Name" class="custom-input" />
+        <input type="text" bind:value={selectedTotalWorkLabel} placeholder="Total Work Items Name" class="custom-input" />
+        <select bind:value={selectedMetric} class="custom-select">
+            {#each Object.values(MetricType) as Metric}
+                <option value={Metric}>{MetricTypeLabels[Metric]}</option>
             {/each}
         </select>
     {/if}
