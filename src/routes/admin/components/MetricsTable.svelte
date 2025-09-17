@@ -19,6 +19,17 @@
     };
 
     let isLoading = true;
+
+    //create
+    let newMetric: EditForm = {
+        id: null,
+        teamId: '',
+        qualifiedWorkLabel: '',
+        totalWorkLabel: '',
+        type: MetricType.TICKET_ONLY
+    };
+
+    //update
     let editModal = false;
     let editForm: EditForm = {
         id: null,
@@ -27,6 +38,8 @@
         totalWorkLabel: '',
         type: MetricType.TICKET_ONLY
     };
+
+    //delete
     let deleteModal = false;
     let toDelete: Metric | null = null;
 
@@ -68,6 +81,47 @@
             showAlert('Failed to load metrics');
         } finally {
             isLoading = false;
+        }
+    }
+
+    async function addMetric(e: SubmitEvent) {
+        e.preventDefault();
+        if (!newMetric.teamId) {
+            showAlert('Team is required.');
+            return;
+        }
+        if (!newMetric.qualifiedWorkLabel.trim()) {
+            showAlert('Qualified work label is required.');
+            return;
+        }
+        if (newMetric.type == MetricType.TICKET_AND_TOTAL && !newMetric.totalWorkLabel.trim()) {
+            showAlert('Total work label is required.');
+            return;
+        }
+        try {
+            const res = await fetch('/api/metrics', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    teamId: newMetric.teamId,
+                    qualifiedWorkLabel: newMetric.qualifiedWorkLabel.trim(),
+                    totalWorkLabel: newMetric.totalWorkLabel.trim(),
+                    type: newMetric.type
+                })
+            });
+            if (!res.ok) throw new Error(await res.text());
+            const created: Metric = await res.json();
+            onMetricsChange(sortMetrics([...metrics, created]));
+            newMetric = {
+                id: null,
+                teamId: '',
+                qualifiedWorkLabel: '',
+                totalWorkLabel: '',
+                type: MetricType.TICKET_ONLY
+            };
+        } catch (err) {
+            console.error('Error adding metric:', err);
+            showAlert('Error adding metric');
         }
     }
 
@@ -120,6 +174,24 @@
 
 <section class="m-2 p-4 bg-gray-800 rounded-lg shadow-md">
     <h2 class="text-xl font-bold mb-4 dark:text-gray-200 text-center">Metrics</h2>
+
+    <form class="flex flex-row flex-nowrap justify-center items-center gap-2 mb-4 overflow-x-auto"
+        onsubmit={addMetric}>
+        <select bind:value={newMetric.teamId} class="custom-select">
+            <option value="">Select Team</option>
+            {#each teams as team}
+                <option value={team.id}>{team.name}</option>
+            {/each}
+        </select>
+        <input type="text" class="custom-input" placeholder="Qualified Work Items Name" bind:value={newMetric.qualifiedWorkLabel} />
+        <input type="text" class="custom-input" placeholder="Total Work Items Name" bind:value={newMetric.totalWorkLabel} />
+        <select bind:value={newMetric.type} class="custom-select">
+            {#each Object.values(MetricType) as typeVal}
+                <option value={typeVal}>{MetricTypeLabels[typeVal]}</option>
+            {/each}
+        </select>
+        <Button type="submit">Add</Button>
+    </form>
 
     {#if isLoading}
         <div class="text-center py-8 text-gray-500 dark:text-gray-400">

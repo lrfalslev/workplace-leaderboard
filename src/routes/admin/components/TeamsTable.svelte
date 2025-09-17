@@ -14,8 +14,15 @@
     };
 
     let isLoading = true;
+
+    //create
+    let newTeamName = '';
+    
+    //update
     let editModal = false;
     let editForm: EditForm = { id: null, name: '' };
+
+    //delete
     let deleteModal = false;
     let toDelete: Team | null = null;
 
@@ -51,6 +58,31 @@
             showAlert('Failed to load teams');
         } finally {
             isLoading = false;
+        }
+    }
+
+    async function addTeam(e: SubmitEvent) {
+        e.preventDefault();
+        if (!newTeamName.trim()) {
+            showAlert('Team name is required.');
+            return;
+        }
+        try {
+            const res = await fetch('/api/teams', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: newTeamName.trim() })
+            });
+
+            if (!res.ok)
+                throw new Error(await res.text());
+            
+            const created: Team = await res.json();
+            onTeamsChange(sortTeams([...teams, created]));
+            newTeamName = '';
+        } catch (err) {
+            console.error('Error adding team:', err);
+            showAlert('Error adding team');
         }
     }
 
@@ -99,6 +131,12 @@
 <section class="m-2 p-4 bg-gray-800 rounded-lg shadow-md">
     <h2 class="text-xl font-bold mb-4 dark:text-gray-200 text-center">Teams</h2>
 
+    <form class="flex flex-row flex-nowrap justify-center items-center gap-2 mb-4 overflow-x-auto"
+        onsubmit={addTeam}>
+        <input type="text" class="custom-input" placeholder="Team Name" bind:value={newTeamName} />
+        <Button type="submit">Add</Button>
+    </form>
+
     {#if isLoading}
         <div class="text-center py-8 text-gray-500 dark:text-gray-400">
             Loading teams...
@@ -118,10 +156,10 @@
                             <tr>
                                 <td>{team.name}</td>
                                 <td>
-                                    <button type="button" on:click={() => openEdit(team)}>
+                                    <button type="button" onclick={() => openEdit(team)}>
                                         <EditSolid class="dark:text-gray-400 dark:hover:text-white"/>
                                     </button>
-                                    <button type="button" on:click={() => openDelete(team)}>
+                                    <button type="button" onclick={() => openDelete(team)}>
                                         <TrashBinSolid class="dark:text-gray-400 dark:hover:text-white"/>
                                     </button>
                                 </td>

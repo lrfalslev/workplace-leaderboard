@@ -16,8 +16,15 @@
     };
 
     let isLoading = true;
+
+    //create
+    let newMember: EditForm = { id: null, name: '', teamId: '' };
+    
+    //update
     let editModal = false;
     let editForm: EditForm = { id: null, name: '', teamId: '' };
+    
+    //delete
     let deleteModal = false;
     let toDelete: TeamMember | null = null;
 
@@ -57,6 +64,34 @@
             showAlert('Failed to load team members');
         } finally {
             isLoading = false;
+        }
+    }
+
+    async function addTeamMember(e: SubmitEvent) {
+        e.preventDefault();
+        if (!newMember.name.trim()) {
+            showAlert('Member name is required.');
+            return;
+        }
+        try {
+            const res = await fetch('/api/team-members', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: newMember.name.trim(),
+                    teamId: newMember.teamId || null
+                })
+            });
+
+            if (!res.ok) 
+                throw new Error(await res.text());
+
+            const created: TeamMember = await res.json();
+            onTeamMembersChange(sortTeamMembers([...teamMembers, created]));
+            newMember = { id: null, name: '', teamId: '' };
+        } catch (err) {
+            console.error('Error adding team member:', err);
+            showAlert('Error adding team member');
         }
     }
 
@@ -107,6 +142,18 @@
 
 <section class="m-2 p-4 bg-gray-800 rounded-lg shadow-md">
     <h2 class="text-xl font-bold mb-4 dark:text-gray-200 text-center">Team Members</h2>
+
+    <form class="flex flex-row flex-nowrap justify-center items-center gap-2 mb-4 overflow-x-auto"
+        onsubmit={addTeamMember}>
+        <select bind:value={newMember.teamId} class="custom-select">
+            <option value="">No Team</option>
+            {#each teams as team}
+                <option value={team.id}>{team.name}</option>
+            {/each}
+        </select>
+        <input type="text" class="custom-input" placeholder="Member Name" bind:value={newMember.name} />
+        <Button type="submit">Add</Button>
+    </form>
 
     {#if isLoading}
         <div class="text-center py-8 text-gray-500 dark:text-gray-400">

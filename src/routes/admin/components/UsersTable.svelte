@@ -20,8 +20,12 @@
     };
 
     let isLoading = true;
+    
+    //update
     let editModal = false;
     let editForm: EditForm = { id: null, username: '', role: '', teamId: '', teamMemberId: '' };
+    
+    //delete
     let deleteModal = false;
     let toDelete: User | null = null;
 
