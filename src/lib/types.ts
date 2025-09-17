@@ -66,9 +66,13 @@ export type SummaryRow = {
   teamMemberName: string;
   teamId: number;
   teamName: string;
-  totalTickets: number;
+  metricId: number;
+  isLegacy: boolean;
+  qualifiedWorkLabel: string;
+  totalWorkLabel: string | null;
   totalWorkItemTickets: number;
   totalWorkItems: number;
+  bonusTickets: number;
 }
 
 export type BonusTicket = {
