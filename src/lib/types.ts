@@ -40,7 +40,7 @@ export type User = {
 };
 
 export type Metric = {
-  id: number | null;
+  id: number;
   teamId: number;
   type: MetricType;
   qualifiedWorkLabel: string;
