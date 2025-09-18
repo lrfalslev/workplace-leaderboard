@@ -44,7 +44,7 @@ export type Metric = {
   teamId: number;
   type: MetricType;
   qualifiedWorkLabel: string;
-  totalWorkLabel: string;
+  totalWorkLabel: string | null;
   isLegacy: boolean;
 }
 
@@ -59,20 +59,6 @@ export type Log = {
   totalWorkLabel: string | null;
   isLegacy: boolean;
   metricType: 'ticket_only' | 'ticket_and_total';
-}
-
-export type SummaryRow = {
-  teamMemberId: number;
-  teamMemberName: string;
-  teamId: number;
-  teamName: string;
-  metricId: number;
-  isLegacy: boolean;
-  qualifiedWorkLabel: string;
-  totalWorkLabel: string | null;
-  totalWorkItemTickets: number;
-  totalWorkItems: number;
-  bonusTickets: number;
 }
 
 export type BonusTicket = {
