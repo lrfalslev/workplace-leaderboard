@@ -4,7 +4,7 @@
     import { Chart } from "@flowbite-svelte-plugins/chart";
     import { Card } from "flowbite-svelte";
     import { user } from "$lib/stores/user";
-    import { UserRole, type Metric } from "$lib/types";
+    import { UserRole } from "$lib/types";
 
     type SummaryRow = {
         teamMemberId: number;
@@ -40,10 +40,10 @@
         workItems: number;
     };
 
-    const metricTicketColors = ["#35bc00", "#5CE65C", "#0F4D0F"];
-    const legacyWorkColor = "#CCFFCC";
+    const metricTicketColors = ["#35BC00", "#A7FFF6", "#2C6E49"];
+    const legacyTicketColor = "#F3B61F";
     const bonusTicketColor = "#007bff";
-    const workItemColor = "#a40693";
+    const workItemColor = "#BBADFF";
 
     let memberSummaries: MemberSummary[] = [];
 
@@ -90,6 +90,18 @@
                     Number.isInteger(val) ? val.toString() : "",
             },
         },
+        states: {
+            hover: {
+                filter: {
+                    type: 'none'
+                }
+            },
+            active: {
+                filter: {
+                    type: 'none'
+                }
+            }
+        },
         tooltip: {
             shared: true,
             intersect: false,
@@ -126,20 +138,22 @@
 
     function getAdminTooltip(index: number) {
         const memberSummary = memberSummaries[index];
-        console.log(memberSummary);
-        const percentage =
-            memberSummary.workItems > 0
-                ? (
-                      (memberSummary.workTickets / memberSummary.workItems) *
-                      100
-                  ).toFixed(1)
-                : "0.0";
-
-        const header = `
-            <div class="p-2 text-sm bg-white dark:bg-gray-700 dark:text-white rounded shadow">
-                <div class="text-center font-bold">${memberSummary.teamMemberName} (${percentage}%)</div>
-                <hr class="my-1 border-gray-300 dark:border-gray-600"/>
-        `;
+        
+        let header: string;
+        if (memberSummary.workItems > 0) {
+            const percentage = ((memberSummary.workTickets / memberSummary.workItems) * 100).toFixed(1);
+            header = `
+                <div class="p-2 text-sm bg-white dark:bg-gray-700 dark:text-white rounded shadow">
+                    <div class="text-center font-bold">${memberSummary.teamMemberName} (${percentage}%)</div>
+                    <hr class="my-1 border-gray-300 dark:border-gray-600"/>
+            `;
+        } else {
+            header = `
+                <div class="p-2 text-sm bg-white dark:bg-gray-700 dark:text-white rounded shadow">
+                    <div class="text-center font-bold">${memberSummary.teamMemberName}</div>
+                    <hr class="my-1 border-gray-300 dark:border-gray-600"/>
+            `;
+        }
 
         const footer = `
                 <hr class="my-1 border-gray-300 dark:border-gray-600"/>
@@ -186,26 +200,7 @@
         );
     }
 
-    function getUsersAcceptanceRate() {
-        const memberSummary = memberSummaries.find(
-            (summary) => summary.teamMemberId === $user?.teamMemberId,
-        );
-
-        if (
-            memberSummary &&
-            memberSummary.workItems != null &&
-            memberSummary.workItems > 0
-        ) {
-            const rate =
-                (memberSummary.workTickets /
-                    memberSummary.workItems) *
-                100;
-            teamMemberAcceptanceRate = rate.toFixed(1);
-            teamMemberName = memberSummary.teamMemberName;
-        }
-    }
-
-    onMount(async () => {
+    async function fetchMemberSummaries() {
         try {
             const response = await fetch("/api/ticket-summary");
             const json: SummaryRow[] = await response.json();
@@ -242,98 +237,105 @@
                 memberSummary.totalTickets += row.workTickets;
             }
 
-            const members = Array.from(summariesByMember.values()).sort((a, b) => {
+            memberSummaries = Array.from(summariesByMember.values()).sort((a, b) => {
                 if (a.teamId !== b.teamId) 
                     return a.teamId - b.teamId;
                 return a.teamMemberName.localeCompare(b.teamMemberName);
             });
-
-            options.xaxis!.categories = members.map(member => member.teamMemberName);
-
-            if ($user?.role === UserRole.ADMIN) {
-                const groupData = new Map<number, number[]>(); // non-legacy groups
-                const groupNames = new Map<number, Set<string>>();
-                const legacyData = Array(members.length).fill(0);
-
-                // Build grouped data directly from precomputed metrics
-                members.forEach((member, memberIdx) => {
-                    const nonLegacyMetrics = Object.entries(member.metrics)
-                        .filter(([_, metric]) => !metric.isLegacy)
-                        .sort(([aId], [bId]) => Number(aId) - Number(bId));
-
-                    nonLegacyMetrics.forEach(([metricId, metric], idx) => {
-                        if (!groupData.has(idx)) {
-                            groupData.set(idx, Array(members.length).fill(0));
-                            groupNames.set(idx, new Set());
-                        }
-                        groupNames.get(idx)!.add(metric.qualifiedWorkLabel);
-                        groupData.get(idx)![memberIdx] += metric.workTickets;
-                    });
-
-                    // Legacy totals
-                    Object.values(member.metrics)
-                        .filter(metric => metric.isLegacy)
-                        .forEach(metric => {
-                            legacyData[memberIdx] += metric.workTickets;
-                        });
-                });
-
-                // Non-legacy grouped series
-                options.series = Array.from(groupData.entries()).map(([groupIndex, data]) => ({
-                    name: Array.from(groupNames.get(groupIndex)!).join(", "),
-                    group: "work",
-                    data,
-                    color: metricTicketColors[groupIndex % metricTicketColors.length]
-                }));
-
-                // Legacy group
-                options.series.push({
-                    name: "Work Tickets",
-                    group: "work",
-                    data: legacyData,
-                    color: legacyWorkColor
-                });
-
-                // Bonus tickets
-                options.series.push({
-                    name: "Bonus Tickets",
-                    group: "work",
-                    data: members.map(m => m.bonusTickets),
-                    color: bonusTicketColor
-                });
-
-                // Total work items (second bar) — precomputed from metrics
-                options.series.push({
-                    name: "Total Work Items",
-                    group: "total",
-                    data: members.map(m => m.workItems),
-                    color: workItemColor
-                });
-
-            } else {
-                options.series = [
-                    {
-                        name: "Work Tickets",
-                        group: "work",
-                        data: members.map(m => m.workTickets),
-                        color: metricTicketColors[0]
-                    },
-                    {
-                        name: "Bonus Tickets",
-                        group: "work",
-                        data: members.map(m => m.bonusTickets),
-                        color: bonusTicketColor
-                    }
-                ];
-            }
-
-            memberSummaries = members;
-
-            if ($user?.teamMemberId != null) 
-                getUsersAcceptanceRate();
         } catch (error) {
             console.error("Failed to fetch summary: ", error);
         }
+    }
+
+    function setAdminChartData() {
+        const memberNames: string[] = [];
+        const metricGroupNames = new Map<number, Set<string>>();
+        const metricGroups = new Map<number, number[]>();
+        const legacyTicketsData: number[] = Array(memberSummaries.length).fill(0);
+        const bonusTicketsData: number[] = [];
+        const workItemsData: number[] = [];
+        
+        memberSummaries.forEach(({ teamMemberName, bonusTickets, workItems, metrics }, memberId) => {            
+            memberNames.push(teamMemberName);
+            bonusTicketsData.push(bonusTickets);
+            workItemsData.push(workItems);
+
+            const nonLegacyMetrics: MetricSummary[] = [];
+            for (const metric of Object.values(metrics)) {
+                if (metric.isLegacy) {
+                    legacyTicketsData[memberId] += metric.workTickets;
+                } else {
+                    nonLegacyMetrics.push(metric);
+                }
+            }
+
+            nonLegacyMetrics.sort((a, b) => a.qualifiedWorkLabel.localeCompare(b.qualifiedWorkLabel));
+
+            nonLegacyMetrics.forEach((metric, idx) => {
+                if (!metricGroups.has(idx)) {
+                    metricGroups.set(idx, Array(memberSummaries.length).fill(0));
+                    metricGroupNames.set(idx, new Set());
+                }
+                metricGroupNames.get(idx)!.add(metric.qualifiedWorkLabel);
+                metricGroups.get(idx)![memberId] += metric.workTickets;
+            });
+        });
+
+        const metricTicketSeries = Array.from(metricGroups, ([idx, data]) => ({
+            name: Array.from(metricGroupNames.get(idx)!).join(", "),
+            group: "tickets",
+            data,
+            color: metricTicketColors[idx % metricTicketColors.length]
+        }));
+        
+        options.xaxis!.categories = memberNames;
+        options.series = [
+            ...metricTicketSeries,
+            { name: "Work Tickets", group: "tickets", data: legacyTicketsData, color: legacyTicketColor },
+            { name: "Bonus Tickets", group: "tickets", data: bonusTicketsData, color: bonusTicketColor },
+            { name: "Total Work Items", group: "work items", data: workItemsData, color: workItemColor }
+        ];
+    }
+
+    function setUserChartData() {
+        const memberNames: string[] = [];
+        const workTicketsData: number[] = [];
+        const bonusTicketsData: number[] = [];
+
+        for (const { teamMemberName, workTickets, bonusTickets } of memberSummaries) {
+            memberNames.push(teamMemberName);
+            workTicketsData.push(workTickets);
+            bonusTicketsData.push(bonusTickets);
+        }
+
+        options.xaxis!.categories = memberNames;
+        options.series = [
+            { name: "Work Tickets", group: "tickets", data: workTicketsData, color: metricTicketColors[0] },
+            { name: "Bonus Tickets", group: "tickets", data: bonusTicketsData, color: bonusTicketColor }
+        ];
+    }
+
+    function getUsersAcceptanceRate() {
+        const memberSummary = memberSummaries.find(
+            summary => summary.teamMemberId === $user?.teamMemberId,
+        );
+
+        if (!memberSummary?.workItems) 
+            return;
+
+        teamMemberName = memberSummary.teamMemberName;
+        teamMemberAcceptanceRate = ((memberSummary.workTickets / memberSummary.workItems) * 100).toFixed();
+    }
+
+    onMount(async () => {
+        await fetchMemberSummaries();
+        if ($user?.role === UserRole.ADMIN) {
+            setAdminChartData();
+        } else {
+            setUserChartData();
+        }
+        if ($user?.teamMemberId != null)
+            getUsersAcceptanceRate();
     });
 </script>
 
