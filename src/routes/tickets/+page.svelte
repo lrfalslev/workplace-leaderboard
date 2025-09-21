@@ -7,6 +7,8 @@
     import TeamTable from "./components/TeamTable.svelte";
     import BonusTicketTable from "./components/BonusTicketTable.svelte";
     import { user } from "$lib/stores/user";
+
+    const BONUS_TAB_ID = -1;
     
     let teams = $state<Team[]>([]);
     let metrics = $state<Metric[]>([]);
@@ -14,7 +16,8 @@
     let rows = $state<Row[]>([]);
      
     let isLoading = $state(true);
-    let selectedTeamId = $state<number | null>(null);
+    let activeTabId = $state<number>();
+    let activeTeamId = $state<number | null>(null);
     let newlyAddedDate = $state<string | null>(null);
     
     //delete state
@@ -24,11 +27,11 @@
     let deleteRowLogIds = $state<number[]>([]);
     
     const filteredMetrics = $derived(() => 
-        metrics.filter(metric => metric.teamId === selectedTeamId)
+        metrics.filter(metric => metric.teamId === activeTeamId)
     );
 
     const filteredMembers = $derived(() => 
-        teamMembers.filter(member => member.teamId === selectedTeamId)
+        teamMembers.filter(member => member.teamId === activeTeamId)
     );
 
     const filteredRows = $derived(() => {
@@ -58,7 +61,6 @@
     async function fetchTeams() {
         try {
             teams = await fetchJsonArray<Team>('/api/manager/teams');
-            selectedTeamId = teams.length > 0 ? teams[0].id : null;
         } catch (err) {
             console.error('Failed to fetch teams: ', err);
             showAlert('Could not load teams.');
@@ -248,6 +250,25 @@
         }
     }
 
+    function selectTab(id: number) {
+        activeTeamId = id === BONUS_TAB_ID ? null : id;
+        activeTabId = id;
+        localStorage.setItem('activeTabId', String(id));
+    }
+    
+    function initActiveTab() {
+        const storedId = localStorage.getItem('activeTabId');
+        const storedIdNum = storedId ? Number(storedId) : null;
+
+        if (storedIdNum === BONUS_TAB_ID && $user?.role === UserRole.ADMIN) {
+            selectTab(BONUS_TAB_ID);
+        } else if (storedIdNum && teams.some(t => t.id === storedIdNum)) {
+            selectTab(storedIdNum);
+        } else if (teams.length > 0) {
+            selectTab(teams[0].id);
+        }
+    }
+
     onMount(async () => {
         try {
             await Promise.all([
@@ -256,6 +277,7 @@
                 fetchLogs(),
                 fetchMetrics()
             ]);
+            initActiveTab();
         } catch (err) {
             console.error('Initial data load failed:', err);
         } finally {
@@ -272,7 +294,7 @@
     <div class="max-w-full mb-8">
         <Tabs tabStyle="underline">
             {#each teams as team}
-                <TabItem title={team.name} open={selectedTeamId === team.id} onclick={() => selectedTeamId = team.id}>
+                <TabItem title={team.name} open={activeTabId === team.id} onclick={() => selectTab(team.id)}>
                     <TeamTable 
                         teamName={team.name}
                         metrics={filteredMetrics()}
@@ -286,7 +308,7 @@
                 </TabItem>
             {/each}
             {#if $user && $user.role === UserRole.ADMIN}
-                <TabItem title="Bonus Tickets">
+                <TabItem title="Bonus Tickets" open={activeTabId === BONUS_TAB_ID} onclick={() => selectTab(BONUS_TAB_ID)}>
                     <BonusTicketTable teamMembers={teamMembers} />
                 </TabItem>
             {/if}

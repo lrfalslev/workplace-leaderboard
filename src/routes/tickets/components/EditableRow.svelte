@@ -173,7 +173,7 @@
                                 placeholder={metric.qualifiedWorkLabel}
                                 title={metric.qualifiedWorkLabel}
                                 size="sm"
-                                class="text-center mb-1"
+                                class="text-center my-1 max-w-[120px]"
                             />
                             {#if metric.type === MetricType.TICKET_AND_TOTAL}
                                 <Input
@@ -181,7 +181,7 @@
                                     placeholder={metric.totalWorkLabel}
                                     title={metric.totalWorkLabel} 
                                     size="sm"
-                                    class="text-center mt-1"
+                                    class="text-center my-1 max-w-[120px]"
                                 />
                             {/if}
                             {#if formValidationErrors[`${memberId}-${metric.id}`]}
