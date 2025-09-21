@@ -44,21 +44,17 @@ export type Metric = {
   teamId: number;
   type: MetricType;
   qualifiedWorkLabel: string;
-  totalWorkLabel: string | null;
+  totalWorkLabel?: string;
   isLegacy: boolean;
 }
 
 export type Log = {
-  id: number | null;
+  id?: number;
   date: string;
   teamMemberId: number;
   metricId: number;
-  qualifiedWorkItems: number;
+  qualifiedWorkItems: number | null;
   totalWorkItems: number | null;
-  qualifiedWorkLabel: string;
-  totalWorkLabel: string | null;
-  isLegacy: boolean;
-  metricType: 'ticket_only' | 'ticket_and_total';
 }
 
 export type BonusTicket = {

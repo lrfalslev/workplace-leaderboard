@@ -83,16 +83,16 @@ export const DELETE: RequestHandler = async function ({ locals, request, platfor
         return json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { workTicketIds } = await request.json() as { workTicketIds: number[] };
+    const { logIds } = await request.json() as { logIds: number[] };
 
-    if (!Array.isArray(workTicketIds) || workTicketIds.length === 0) {
+    if (!Array.isArray(logIds) || logIds.length === 0) {
         return json({ error: 'No IDs provided' }, { status: 400 });
     }
 
     try {
-        const placeholders = workTicketIds.map(() => '?').join(', ');
+        const placeholders = logIds.map(() => '?').join(', ');
         const result = await platform?.env.DB.prepare(`DELETE FROM logs WHERE id IN (${placeholders})`)
-            .bind(...workTicketIds)
+            .bind(...logIds)
             .run();
 
         return json({ success: true, deleted: result?.meta.changed_db });

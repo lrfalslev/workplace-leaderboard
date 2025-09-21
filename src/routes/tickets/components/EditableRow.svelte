@@ -1,84 +1,96 @@
 <script lang="ts">
     import { TableBodyRow, TableBodyCell, Input, Button, Tooltip } from "flowbite-svelte";
     import { EditSolid, ExclamationCircleSolid, TrashBinSolid } from "flowbite-svelte-icons";
-    import { MetricType, type Team, type Log } from '$lib/types';
+    import { MetricType, type Log, type Metric } from '$lib/types';
     import { onMount } from "svelte";
 
     export type Row = {
         date: string;
-        logs: Record<number, Log>;
+        logs: Record<number, Record<number, Log>>;
     }
 
     type LogFormInput = {
-        id: number | null;
+        id?: number;
         date: string;
         teamMemberId: number;
         metricId: number;
         qualifiedWorkItems: string;
         totalWorkItems?: string;
-        metricType: MetricType;
-        qualifiedWorkLabel: string;
-        totalWorkLabel?: string | null;
     };
 
-    let { team, teamMemberIds, row, saveRow, deleteRow, isNew } = $props<{
-        team: Team;
+    let { teamName, metrics, teamMemberIds, row, saveRow, deleteRow, isNew }: {
+        teamName: string;
+        metrics: Metric[];
         teamMemberIds: number[];
         row: Row;
         saveRow: (payload: Log[]) => Promise<boolean>;
-        deleteRow: (date: string, logIds: number[]) => void;
-        isNew: boolean;
-    }>();
+        deleteRow: (date: string, teamName: string, logIds: number[]) => void;
+        isNew: boolean
+    } = $props();
 
+    let isLoading = $state(true);
     let isEditing = $state(isNew);
-    let formInputs = $state<Record<string, LogFormInput>>({});
-    let errors = $state<Record<number, string>>({});
-    
+    let logFormInputs = $state<Record<number, Record<number, LogFormInput>>>({});
+    let formValidationErrors = $state<Record<string, string>>({}); // key: memberId-metricId
+
+    const hasLegacyMetric = Object.values(row.logs).some(memberLogs =>
+        Object.keys(memberLogs).some(metricId => 
+            metrics.find(m => m.id === Number(metricId))?.isLegacy
+        )
+    );
+
+    const displayMetrics = hasLegacyMetric
+        ? metrics.filter(m => m.isLegacy)
+        : metrics.filter(m => !m.isLegacy);
+
     function validateForm(): boolean {
         let valid = true;
-        const newErrors: Record<number, string> = {};
+        const newErrors: Record<string, string> = {};
 
-        for (const input of Object.values(formInputs)) {
-            const { teamMemberId, metricType, qualifiedWorkItems, totalWorkItems } = input;
-            const tickets = qualifiedWorkItems.trim();
-            const total = totalWorkItems?.trim();
-
-            const hasTickets = tickets !== '';
-            const hasTotal = total !== '';
-            const ticketsNum = Number(tickets);
-            const totalNum = Number(total);
-
-            if (hasTickets && (isNaN(ticketsNum) || ticketsNum < 0)) {
-                newErrors[teamMemberId] = 'Tickets must be a non-negative number';
-                valid = false;
-                continue;
-            }
-
-            if (metricType === MetricType.TICKET_AND_TOTAL) {
-                const bothEmpty = !hasTickets && !hasTotal;
-                const bothFilled = hasTickets && hasTotal;
-
-                if (!bothEmpty && !bothFilled) {
-                    newErrors[teamMemberId] = 'Both fields must be filled or both empty';
-                    valid = false;
-                    continue;
-                }
+        for (const memberId in logFormInputs) {
+            for (const metricId in logFormInputs[memberId]) {
+                const key = `${memberId}-${metricId}`;
+                const input = logFormInputs[memberId][metricId];
                 
-                if (hasTotal && (isNaN(totalNum) || totalNum < 0)) {
-                    newErrors[teamMemberId] = 'Total must be a non-negative number';
+                const tickets = input.qualifiedWorkItems.trim();
+                const total = input.totalWorkItems?.trim();
+                const hasTickets = tickets !== '';
+                const hasTotal = total !== '';
+                const ticketsNum = Number(tickets);
+                const totalNum = Number(total);
+
+                if (hasTickets && (isNaN(ticketsNum) || ticketsNum < 0)) {
+                    newErrors[key] = 'Tickets must be a non-negative number';
                     valid = false;
                     continue;
                 }
 
-                if (hasTickets && hasTotal && ticketsNum > totalNum) {
-                    newErrors[teamMemberId] = 'Tickets cannot exceed total';
-                    valid = false;
-                    continue;
+                if (metrics.find(metric => metric.id === input.metricId)?.type === MetricType.TICKET_AND_TOTAL) {
+                    const bothEmpty = !hasTickets && !hasTotal;
+                    const bothFilled = hasTickets && hasTotal;
+
+                    if (!bothEmpty && !bothFilled) {
+                        newErrors[key] = 'Both fields must be filled or both empty';
+                        valid = false;
+                        continue;
+                    }
+
+                    if (hasTotal && (isNaN(totalNum) || totalNum < 0)) {
+                        newErrors[key] = 'Total must be a non-negative number';
+                        valid = false;
+                        continue;
+                    }
+
+                    if (hasTickets && hasTotal && ticketsNum > totalNum) {
+                        newErrors[key] = 'Tickets cannot exceed total';
+                        valid = false;
+                        continue;
+                    }
                 }
             }
         }
 
-        errors = newErrors;
+        formValidationErrors = newErrors;
         return valid;
     }
 
@@ -86,120 +98,131 @@
         if (!validateForm()) 
             return;
 
-        const payload: Log[] = Object.values(formInputs)
-            .filter(item => item.qualifiedWorkItems !== '')
-            .map(item => ({
-                id: item.id,
-                date: item.date,
-                teamMemberId: item.teamMemberId,
-                metricId: item.metricId,
-                qualifiedWorkItems: Number(item.qualifiedWorkItems),
-                totalWorkItems: item.totalWorkItems === '' ? null : Number(item.totalWorkItems),
-                qualifiedWorkLabel: item.qualifiedWorkLabel,
-                totalWorkLabel: item.totalWorkLabel || null,
-                isLegacy: false,
-                metricType: team.type
-            }));
+        const payload: Log[] = [];
+        for (const memberId in logFormInputs) {
+            for (const metricId in logFormInputs[memberId]) {
+                const log = logFormInputs[memberId][metricId];
+                if (log.qualifiedWorkItems !== '') {
+                    payload.push({
+                        date: log.date,
+                        teamMemberId: log.teamMemberId,
+                        metricId: log.metricId,
+                        qualifiedWorkItems: Number(log.qualifiedWorkItems),
+                        totalWorkItems: log.totalWorkItems === '' ? null : Number(log.totalWorkItems),
+                    });
+                }
+            }
+        }
 
         const success = await saveRow(payload);
-        if (success)
-            toggleEditing();
+        if (success) toggleEditing();
     }
 
     function handleDelete() {
-        const logIds = (Object.values(row.logs) as Log[]).map(item => item.id);
-        deleteRow(row.date, team.name, logIds);
+        const logIds = Object.values(row.logs)
+            .flatMap(memberLogs => Object.values(memberLogs))
+            .map(log => log.id)
+            .filter((id): id is number => id != null);
+
+        deleteRow(row.date, teamName, logIds);
     }
-      
+
     function toggleEditing() {
         isEditing = !isEditing;
     }
-
+    
     onMount(() => {
-        const initialInputs: Record<string, LogFormInput> = {};
-        for (const teamMemberId of teamMemberIds) {
-            const existing = row.logs[teamMemberId];
-            initialInputs[teamMemberId] = existing
-                ? {
-                    ...existing,
-                    qualifiedWorkItems: existing.qualifiedWorkItems != null ? String(existing.qualifiedWorkItems) : '',
-                    totalWorkItems: existing.totalWorkItems != null ? String(existing.totalWorkItems) : ''
-                }
-                : {
+        const initialInputs: Record<number, Record<number, LogFormInput>> = {};
+
+        for (const memberId of teamMemberIds) {
+            initialInputs[memberId] = {};
+            for (const metric of metrics) {
+                const existing = row.logs[memberId]?.[metric.id];
+                initialInputs[memberId][metric.id] = {
                     date: row.date,
-                    teamMemberId,
-                    qualifiedWorkItems: '',
-                    totalWorkItems: ''
+                    teamMemberId: memberId,
+                    metricId: metric.id,
+                    qualifiedWorkItems: existing?.qualifiedWorkItems != null ? String(existing.qualifiedWorkItems) : '',
+                    totalWorkItems: existing?.totalWorkItems != null ? String(existing.totalWorkItems) : ''
                 };
+            }
         }
-        formInputs = initialInputs;
+
+        logFormInputs = initialInputs;
+        isLoading = false;
     });
 </script>
 
-<TableBodyRow class="items-center">
-    <TableBodyCell class="px-2 text-center">{row.date}</TableBodyCell>
-    
-    {#each teamMemberIds as teamMemberId (teamMemberId)}
-        {@const log = row.logs[teamMemberId]}
-        <TableBodyCell class="border dark:border-gray-700 p-2">
-            {#if isEditing}
-                {#if formInputs[teamMemberId]}
-                    <div class="relative flex justify-center items-center">
-                        <div>
+{#if isLoading}
+    <TableBodyRow>
+        <TableBodyCell colspan={teamMemberIds.length + 2}>
+            Loading...
+        </TableBodyCell>
+    </TableBodyRow>
+{:else}
+    <TableBodyRow class="items-center">
+        <TableBodyCell class="px-2 text-center">{row.date}</TableBodyCell>
+
+        {#each teamMemberIds as memberId (memberId)}
+            <TableBodyCell class="align-middle border dark:border-gray-700 p-2">
+                {#if isEditing}
+                    {#each displayMetrics as metric (metric.id)}
+                        <div class="relative flex flex-col items-center my-1">
                             <Input
-                                bind:value={formInputs[teamMemberId].qualifiedWorkItems}
-                                placeholder={formInputs[teamMemberId].qualifiedWorkLabel}
-                                title={formInputs[teamMemberId].qualifiedWorkLabel}
+                                bind:value={logFormInputs[memberId][metric.id].qualifiedWorkItems}
+                                placeholder={metric.qualifiedWorkLabel}
+                                title={metric.qualifiedWorkLabel}
                                 size="sm"
                                 class="text-center mb-1"
                             />
-                            {#if formInputs[teamMemberId].metricType == MetricType.TICKET_AND_TOTAL}
+                            {#if metric.type === MetricType.TICKET_AND_TOTAL}
                                 <Input
-                                    bind:value={formInputs[teamMemberId].totalWorkItems}
-                                    placeholder={formInputs[teamMemberId].totalWorkLabel || 'Total'}
-                                    title={formInputs[teamMemberId].totalWorkLabel || 'Total Work Items'} 
+                                    bind:value={logFormInputs[memberId][metric.id].totalWorkItems}
+                                    placeholder={metric.totalWorkLabel}
+                                    title={metric.totalWorkLabel} 
                                     size="sm"
                                     class="text-center mt-1"
                                 />
                             {/if}
+                            {#if formValidationErrors[`${memberId}-${metric.id}`]}
+                                <ExclamationCircleSolid class="text-red-500 mt-1" />
+                                <Tooltip>{formValidationErrors[`${memberId}-${metric.id}`]}</Tooltip>
+                            {/if}
                         </div>
-                        {#if errors[teamMemberId]}
-                            <ExclamationCircleSolid class="text-red-500 ml-1" />
-                            <Tooltip>{errors[teamMemberId]}</Tooltip>
+                    {/each}
+                {:else}
+                    {#each displayMetrics as metric (metric.id)}
+                        {#if row.logs[memberId]?.[metric.id]}
+                            {#if metric.type === MetricType.TICKET_ONLY}
+                                {row.logs[memberId][metric.id].qualifiedWorkItems}
+                            {:else}
+                                {row.logs[memberId][metric.id].qualifiedWorkItems}/{row.logs[memberId][metric.id].totalWorkItems}
+                            {/if}
+                        {:else}
+                            -
                         {/if}
-                    </div>
-                {:else}
-                    <span class="text-sm text-gray-400">Loading...</span>
+                        <br />
+                    {/each}
                 {/if}
+            </TableBodyCell>
+        {/each}
+
+        <TableBodyCell class="align-middle">
+            {#if isEditing}
+                <div class="flex flex-wrap justify-center gap-2 w-full">
+                    <Button type="button" class="py-1 text-sm min-w-[60px]" onclick={handleSave}>Save</Button>
+                    <Button type="button" class="py-1 text-sm min-w-[60px]" onclick={toggleEditing}>Cancel</Button>
+                </div>
             {:else}
-                {#if log == null || log.qualifiedWorkItems == null || log.qualifiedWorkItems === ""}
-                    -
-                {:else if log.metricType === MetricType.TICKET_ONLY}
-                    {log.qualifiedWorkItems}
-                {:else if log.totalWorkItems === 0}
-                    0
-                {:else}
-                    {log.qualifiedWorkItems}/{log.totalWorkItems}
-                {/if}
+                <div>
+                    <button type="button" onclick={toggleEditing} disabled={hasLegacyMetric}>
+                        <EditSolid class="dark:text-gray-400 dark:hover:text-white"/>
+                    </button>
+                    <button type="button" onclick={handleDelete}>
+                        <TrashBinSolid class="dark:text-gray-400 dark:hover:text-white"/>
+                    </button>
+                </div>
             {/if}
         </TableBodyCell>
-    {/each}
-
-    <TableBodyCell class="flex justify-center items-center">
-        {#if isEditing}
-            <div class="flex flex-wrap justify-center gap-2 w-full">
-                <Button type="button" class="py-1 text-sm min-w-[60px]" onclick={handleSave}>Save</Button>
-                <Button type="button" class="py-1 text-sm min-w-[60px]" onclick={toggleEditing}>Cancel</Button>
-            </div>
-        {:else}
-            <div>
-                <button type="button" onclick={toggleEditing}>
-                    <EditSolid class="dark:text-gray-400 dark:hover:text-white"/>
-                </button>
-                <button type="button" onclick={handleDelete}>
-                    <TrashBinSolid class="dark:text-gray-400 dark:hover:text-white"/>
-                </button>
-            </div>
-        {/if}
-    </TableBodyCell>
-</TableBodyRow>
+    </TableBodyRow>
+{/if}

@@ -1,7 +1,7 @@
 <script lang="ts">
     import { onMount } from "svelte";
     import { Tabs, TabItem, Modal, Button } from "flowbite-svelte";
-    import { type Log, type TeamMember, type Team, UserRole } from '$lib/types';
+    import { type Log, type TeamMember, type Team, UserRole, type Metric } from '$lib/types';
     import { showAlert } from "$lib/stores/alert";
     import type { Row } from "./components/EditableRow.svelte";
     import TeamTable from "./components/TeamTable.svelte";
@@ -9,43 +9,41 @@
     import { user } from "$lib/stores/user";
     
     let teams = $state<Team[]>([]);
+    let metrics = $state<Metric[]>([]);
     let teamMembers = $state<TeamMember[]>([]);
-    let logs = $state<Row[]>([]); 
-    
+    let rows = $state<Row[]>([]);
+     
+    let isLoading = $state(true);
     let selectedTeamId = $state<number | null>(null);
-
+    let newlyAddedDate = $state<string | null>(null);
+    
+    //delete state
     let deleteRowModal = $state(false);
     let deleteRowDate = $state<string | null>(null);
     let deleteRowTeamName = $state<string | null>(null);
-    let deleteRowIds = $state<number[]>([]);
-
-    let newlyAddedDate = $state<string | null>(null);
-
-    let isLoading = $state(true);
+    let deleteRowLogIds = $state<number[]>([]);
+    
+    const filteredMetrics = $derived(() => 
+        metrics.filter(metric => metric.teamId === selectedTeamId)
+    );
 
     const filteredMembers = $derived(() => 
         teamMembers.filter(member => member.teamId === selectedTeamId)
     );
 
-    const filteredLogs = $derived(() => {
+    const filteredRows = $derived(() => {
         const memberIds = filteredMembers().map(member => member.id);
         const seenDates = new Set<string>();
 
-        return logs
-            .map(row => {
-                const filtered: Row = {
-                    date: row.date,
-                    logs: {}
-                };
-
-                for (const id of memberIds) {
-                    if (row.logs[id]) {
-                        filtered.logs[id] = row.logs[id];
-                    }
-                }
-
-                return filtered;
-            })
+        return rows
+            .map(row => ({
+                date: row.date,
+                logs: Object.fromEntries(
+                    memberIds
+                        .filter(id => row.logs[id])
+                        .map(id => [id, row.logs[id]])
+                )
+            }))
             .filter(row => {
                 const isRelevant = Object.keys(row.logs).length > 0 || row.date === newlyAddedDate;
                 const isNew = !seenDates.has(row.date);
@@ -59,52 +57,36 @@
 
     async function fetchTeams() {
         try {
-            const response = await fetch('/api/manager/teams');
-            if (!response.ok) 
-                throw new Error(`HTTP ${response.status}`);
-            
-            const data = await response.json();
-            if (!Array.isArray(data))
-                throw new Error('Invalid data format');
-
-            teams = data;
-            selectedTeamId = data.length > 0 ? data[0].id : null;
+            teams = await fetchJsonArray<Team>('/api/manager/teams');
+            selectedTeamId = teams.length > 0 ? teams[0].id : null;
         } catch (err) {
             console.error('Failed to fetch teams: ', err);
             showAlert('Could not load teams.');
         }
     }
 
+    async function fetchMetrics() {
+        try {
+            metrics = await fetchJsonArray<Metric>('/api/manager/metrics');
+        } catch (err) {
+            console.error('Failed to fetch metrics: ', err);
+            showAlert('Could not load metrics.');
+        }
+    }
+
     async function fetchTeamMembers() {
         try {
-            const response = await fetch('/api/manager/team-members');
-
-            if (!response.ok) 
-                throw new Error(`HTTP ${response.status}`);
-
-            const data = await response.json();
-            if (!Array.isArray(data))
-                throw new Error('Invalid data format');
-
-            teamMembers = data.sort((a, b) => a.name.localeCompare(b.name));
+            teamMembers = (await fetchJsonArray<TeamMember>('/api/manager/team-members'))
+                .sort((a, b) => a.name.localeCompare(b.name));
         } catch (err) {
-            console.error('Failed to fetch topviews: ', err);
+            console.error('Failed to fetch team members: ', err);
             showAlert('Could not load team members.');
         }
     }
 
     async function fetchLogs() {
         try {
-            const response = await fetch('/api/manager/logs');
-
-            if (!response.ok) 
-                throw new Error(`HTTP ${response.status}`);
-
-            const data = await response.json();
-            if (!Array.isArray(data))
-                throw new Error('Invalid data format');
-
-            const logsRaw = data as Log[];
+            const logsRaw = await fetchJsonArray<Log>('/api/manager/logs');
             const tempMap = new Map<string, Row>();
 
             for (const item of logsRaw) {
@@ -118,34 +100,46 @@
                 }
 
                 const row = tempMap.get(dateKey)!;
-                row.logs[item.teamMemberId] = {
+                
+                if (!row.logs[item.teamMemberId]) {
+                    row.logs[item.teamMemberId] = {};
+                }
+                
+                row.logs[item.teamMemberId][item.metricId] = {
                     id: item.id,
                     date: item.date,
                     teamMemberId: item.teamMemberId,
                     metricId: item.metricId,
                     qualifiedWorkItems: item.qualifiedWorkItems,
                     totalWorkItems: item.totalWorkItems,
-                    qualifiedWorkLabel: item.qualifiedWorkLabel,
-                    totalWorkLabel: item.totalWorkLabel,
-                    isLegacy: item.isLegacy,
-                    metricType: item.metricType
                 };
             }
 
-            logs = Array.from(tempMap.values()).sort((a, b) => b.date.localeCompare(a.date));
-
+            rows = Array.from(tempMap.values()).sort((a, b) => b.date.localeCompare(a.date));
         } catch (err) {
             console.error('Failed to fetch logs: ', err);
             showAlert('Could not load logs.');
         }
     }
 
+    async function fetchJsonArray<T>(url: string): Promise<T[]> {
+        const response = await fetch(url);
+        if (!response.ok) 
+            throw new Error(`HTTP ${response.status}`);
+        
+        const data = await response.json();
+        if (!Array.isArray(data)) 
+            throw new Error('Invalid data format');
+
+        return data;
+    }
+
     function addRow(date: string) {
         const memberIds = filteredMembers().map(member => member.id);
 
-        const dateExistsForTeam = logs.some(row =>
+        const dateExistsForTeam = rows.some(row =>
             row.date === date &&
-            memberIds.some(id => row.logs[id])
+            memberIds.some(id => row.logs[id] && Object.keys(row.logs[id]).length > 0)
         );
 
         if (dateExistsForTeam) {
@@ -153,15 +147,30 @@
             return;
         }
 
-        logs = [...logs, { date, logs: {} }]
+        const nonLegacyMetrics = filteredMetrics().filter(m => !m.isLegacy);
+
+        const newLogs: Row['logs'] = {};
+        for (const memberId of memberIds) {
+            newLogs[memberId] = {};
+            for (const metric of nonLegacyMetrics) {
+                newLogs[memberId][metric.id] = {
+                    date,
+                    teamMemberId: memberId,
+                    metricId: metric.id,
+                    qualifiedWorkItems: null,
+                    totalWorkItems: null
+                };
+            }
+        }
+        rows = [...rows, { date, logs: newLogs }]
             .sort((a, b) => b.date.localeCompare(a.date));
         newlyAddedDate = date;
     }
 
-    function deleteRow(date: string, teamName: string, ids: number[]) {
+    function deleteRow(date: string, teamName: string, logIds: number[]) {
         deleteRowDate = date;
         deleteRowTeamName = teamName;
-        deleteRowIds = ids;
+        deleteRowLogIds = logIds;
         deleteRowModal = true;
     }
 
@@ -170,22 +179,30 @@
             const response = await fetch(`/api/logs`, {
                 method: 'DELETE',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ logIds: deleteRowIds })
+                body: JSON.stringify({ logIds: deleteRowLogIds })
             });
 
             if (!response.ok)
                 throw new Error(await response.text());
 
-            logs = logs.map(row => {
-                if (row.date !== deleteRowDate) return row;
+            rows = rows.map(row => {
+                if (row.date !== deleteRowDate) 
+                    return row;
 
-                const updatedLogs = { ...row.logs };
-                for (const id of deleteRowIds) {
-                    delete updatedLogs[id];
-                }
-
-                return { ...row, logs: updatedLogs };
-            }).filter(row => Object.keys(row.logs).length > 0);
+                    const updatedLogs: Row['logs'] = {};
+                    for (const memberId in row.logs) {
+                        const log = { ...row.logs[memberId] };
+                        for (const metricId in log) {
+                            if (deleteRowLogIds.includes(log[metricId].id!))
+                                delete log[metricId];
+                        }
+                        if (Object.keys(log).length > 0) {
+                            updatedLogs[+memberId] = log;
+                        }
+                    }
+                    return { ...row, logs: updatedLogs };
+                })
+                .filter(row => Object.keys(row.logs).length > 0);
         } catch (err) {
             console.error('Error deleting logs: ', err);
             showAlert('Could not delete logs. Please try again.');
@@ -204,28 +221,22 @@
                 throw new Error(await response.text());
 
             const result = await response.json();
-            if (!Array.isArray(result)) throw new Error('Invalid response format');
+            if (!Array.isArray(result))
+                throw new Error('Invalid response format');
 
-            for (const updatedItem of result as Log[]) {
-                let row = logs.find(r => r.date === updatedItem.date);
+            for (const updatedLog of result as Log[]) {
+                let row = rows.find(log => log.date === updatedLog.date);
+
                 if (!row) {
-                    row = { date: updatedItem.date, logs: {} };
-                    logs = [...logs, row];
+                    row = { date: updatedLog.date, logs: {} };
+                    rows = [...rows, row];
                 }
 
+                if (!row.logs[updatedLog.teamMemberId]) {
+                    row.logs[updatedLog.teamMemberId] = {};
+                }
 
-                row.logs[updatedItem.teamMemberId] = {
-                    id: updatedItem.id,
-                    date: updatedItem.date,
-                    teamMemberId: updatedItem.teamMemberId,
-                    metricId: updatedItem.metricId,
-                    qualifiedWorkItems: updatedItem.qualifiedWorkItems,
-                    totalWorkItems: updatedItem.totalWorkItems,
-                    qualifiedWorkLabel: updatedItem.qualifiedWorkLabel,
-                    totalWorkLabel: updatedItem.totalWorkLabel,
-                    isLegacy: updatedItem.isLegacy,
-                    metricType: updatedItem.metricType
-                };
+                row.logs[updatedLog.teamMemberId][updatedLog.metricId] = updatedLog;
             }
 
             newlyAddedDate = null;
@@ -242,7 +253,8 @@
             await Promise.all([
                 fetchTeams(),
                 fetchTeamMembers(),
-                fetchLogs()
+                fetchLogs(),
+                fetchMetrics()
             ]);
         } catch (err) {
             console.error('Initial data load failed:', err);
@@ -262,9 +274,10 @@
             {#each teams as team}
                 <TabItem title={team.name} open={selectedTeamId === team.id} onclick={() => selectedTeamId = team.id}>
                     <TeamTable 
-                        team={team}
+                        teamName={team.name}
+                        metrics={filteredMetrics()}
                         teamMembers={filteredMembers()}
-                        rows={filteredLogs()}
+                        rows={filteredRows()}
                         addRow={addRow}
                         saveRow={saveRow}
                         deleteRow={deleteRow}
@@ -272,7 +285,7 @@
                     </TeamTable>
                 </TabItem>
             {/each}
-            {#if $user && $user.role == UserRole.ADMIN}
+            {#if $user && $user.role === UserRole.ADMIN}
                 <TabItem title="Bonus Tickets">
                     <BonusTicketTable teamMembers={teamMembers} />
                 </TabItem>
@@ -282,12 +295,12 @@
 {/if}
 
 <Modal form bind:open={deleteRowModal} size="xs" class="pt-8 text-center" onaction={async ({ action }) => {
-    if (action === 'success' && deleteRowIds?.length) {
-        await deleteLogs();
-        deleteRowModal = false;
-    } else if (action === 'decline') {
-        deleteRowModal = false;
-    }
+        if (action === 'success' && deleteRowLogIds.length) {
+            await deleteLogs();
+            deleteRowModal = false;
+        } else if (action === 'decline') {
+            deleteRowModal = false;
+        }
     }}>
     <p>
         Delete all <strong>{deleteRowTeamName}</strong> logs for date <strong>{deleteRowDate}</strong>?<br />

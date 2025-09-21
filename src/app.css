@@ -40,6 +40,10 @@ button:not(:disabled) {
   cursor: pointer;
 }
 
+button:disabled {
+  cursor: not-allowed;
+}
+
 .custom-input {
   display: block;
   width: 100%;
