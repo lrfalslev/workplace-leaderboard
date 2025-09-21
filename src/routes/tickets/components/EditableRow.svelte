@@ -195,6 +195,8 @@
                         {#if row.logs[memberId]?.[metric.id]}
                             {#if metric.type === MetricType.TICKET_ONLY}
                                 {row.logs[memberId][metric.id].qualifiedWorkItems}
+                            {:else if row.logs[memberId][metric.id].totalWorkItems === 0}
+                                0
                             {:else}
                                 {row.logs[memberId][metric.id].qualifiedWorkItems}/{row.logs[memberId][metric.id].totalWorkItems}
                             {/if}
