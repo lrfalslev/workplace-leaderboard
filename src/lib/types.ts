@@ -10,61 +10,60 @@ export const UserRoleLabels: Record<UserRole, string> = {
   [UserRole.MANAGER]: 'Manager'
 };
 
-export enum TeamType {
+export enum MetricType {
   TICKET_AND_TOTAL = 'ticket_and_total',
   TICKET_ONLY = 'ticket_only'
 }
 
-export const TeamTypeLabels: Record<TeamType, string> = {
-  [TeamType.TICKET_AND_TOTAL]: 'Tickets And Totals',
-  [TeamType.TICKET_ONLY]: 'Tickets Only'
+export const MetricTypeLabels: Record<MetricType, string> = {
+  [MetricType.TICKET_AND_TOTAL]: 'Tickets And Totals',
+  [MetricType.TICKET_ONLY]: 'Tickets Only'
 };
 
 export type Team = {
-    id: number;
-    name: string;
-    type: TeamType;
+  id: number;
+  name: string;
 }
 
 export type TeamMember = {
-    id: number;
-    name: string;
-    teamId: number;
+  id: number;
+  name: string;
+  teamId: number;
 }
 
 export type User = {
-    id: number;
-    username: string;
-    role: UserRole;
-    teamId: number | null;
-    teamMemberId: number | null;
+  id: number;
+  username: string;
+  role: UserRole;
+  teamId: number | null;
+  teamMemberId: number | null;
 };
 
-export type WorkItem = {
-    id: number | null;
-    date: string;
-    teamMemberId: number;
-    ticketsAwarded: number;
-    workItems: number | null;
+export type Metric = {
+  id: number;
+  teamId: number;
+  type: MetricType;
+  qualifiedWorkLabel: string;
+  totalWorkLabel?: string;
+  isLegacy: boolean;
 }
 
-export type SummaryRow = {
-    teamMemberId: number;
-    teamMemberName: string;
-    teamId: number;
-    teamName: string;
-    totalTickets: number;
-    totalWorkItemTickets: number;
-    totalWorkItems: number;
+export type Log = {
+  id?: number;
+  date: string;
+  teamMemberId: number;
+  metricId: number;
+  qualifiedWorkItems: number | null;
+  totalWorkItems: number | null;
 }
 
 export type BonusTicket = {
-    id: number;
-    date: string;
-    description: string;
-    ticketsAwarded: number;
-    teamMemberId: number;
-    managerId: number;
-    teamMemberName: string;
-    managerName: string;
+  id: number;
+  date: string;
+  description: string;
+  ticketsAwarded: number;
+  teamMemberId: number;
+  managerId: number;
+  teamMemberName: string;
+  managerName: string;
 };

@@ -40,6 +40,10 @@ button:not(:disabled) {
   cursor: pointer;
 }
 
+button:disabled {
+  cursor: not-allowed;
+}
+
 .custom-input {
   display: block;
   width: 100%;
@@ -100,4 +104,49 @@ button:not(:disabled) {
 
 .custom-select option[disabled] {
   color: #9ca3af;
+}
+
+/* admin table styles */
+.admin-table {
+  width: 100%;
+  overflow-x: auto;
+  display: block;
+
+  /* Tailwind equivalents */
+  text-align: center;              /* text-center */
+  font-size: 0.75rem;               /* text-xs */
+  min-width: 100%;                  /* min-w-full */
+  color: #1f2937;                   /* dark:text-gray-800 fallback */
+}
+
+@media (min-width: 768px) {
+  .admin-table {
+    width: 80%;
+    margin: 0 auto;
+    display: table;
+    overflow-x: visible;
+    font-size: 1rem; /* md:text-base */
+  }
+}
+
+/* Dark mode text color */
+.dark .admin-table {
+  color: #1f2937; /* Tailwind's gray-800 */
+}
+
+.admin-table th,
+.admin-table td {
+  padding: 0.5rem;
+  white-space: nowrap;
+}
+
+.admin-table td {
+  border: 1px solid #364153; /* Tailwind's gray-600 */
+}
+
+.admin-table th {
+  background-color: #364153; /* Tailwind's bg-gray-700 */
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
