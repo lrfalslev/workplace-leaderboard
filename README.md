@@ -15,37 +15,9 @@ Employees earn tickets by completing work that meets or exceeds defined metrics.
 - **Leaderboard:** Real-time standings of all employees, showing ticket counts.
 - **Drawing entries:** Tickets act as entries for prize drawings at the end of the competition.
 
-## Getting Started
-
-### 1. Install dependencies
-
-```bash
-npm install
-```
-
-### 2. Start the development server
-
-```bash
-npm run dev
-```
-
-Visit [localhost:5173](http://localhost:5173) (or the port shown in your terminal) to view the app.
-
-### 3. Build for production
-
-```bash
-npm run build
-```
-
-Preview the production build:
-
-```bash
-npm run preview
-```
-
 ## Usage
 
 - Admin sets up teams, and team metrics, and assigns team members.
-- Managers log in and assign tickets to team members based on completed work and bonus achievements.
+- Admin/Managers log in and assign tickets to team members based on completed work and bonus achievements.
 - Employees can view their standings on the leaderboard. And if their account is linked to a team member can view specific metrics on how well they're doing.
 - At the end of the challenge, tickets are used as entries in a random prize drawing.
