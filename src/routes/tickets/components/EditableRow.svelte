@@ -1,8 +1,9 @@
 <script lang="ts">
     import { TableBodyRow, TableBodyCell, Input, Button, Tooltip } from "flowbite-svelte";
     import { EditSolid, ExclamationCircleSolid, TrashBinSolid } from "flowbite-svelte-icons";
-    import { MetricType, type Log, type Metric } from '$lib/types';
+    import { MetricType, UserRole, type Log, type Metric } from '$lib/types';
     import { onMount } from "svelte";
+    import { user } from "$lib/stores/user";
 
     export type Row = {
         date: string;
@@ -37,7 +38,9 @@
         Object.keys(memberLogs).some(metricId => 
             metrics.find(m => m.id === Number(metricId))?.isLegacy
         )
-    );
+    );    
+    
+    const canEditRow = !hasLegacyMetric || ($user && $user.role === UserRole.ADMIN);
 
     const displayMetrics = hasLegacyMetric
         ? metrics.filter(m => m.isLegacy)
@@ -217,9 +220,12 @@
                 </div>
             {:else}
                 <div>
-                    <button type="button" onclick={toggleEditing} disabled={hasLegacyMetric}>
+                    <button type="button" onclick={toggleEditing} disabled={!canEditRow}>
                         <EditSolid class="dark:text-gray-400 dark:hover:text-white"/>
                     </button>
+                    {#if !canEditRow}
+                        <Tooltip>Only Admins Can Edit Legacy Tickets</Tooltip>
+                    {/if}
                     <button type="button" onclick={handleDelete}>
                         <TrashBinSolid class="dark:text-gray-400 dark:hover:text-white"/>
                     </button>
