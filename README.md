@@ -1,38 +1,23 @@
-# sv
+# Workplace Leaderboard
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+A Svelte-powered leaderboard app for small businesses to run workplace competitions and reward employees for outstanding work.
 
-## Creating a project
+## Overview
 
-If you're seeing this, you've probably already done this step. Congrats!
+This app enables managers to assign tickets to employees for meeting work standards or for exceptional achievements (bonus tickets). Tickets are linked to specific metrics for each team, allowing for flexible tracking of both standard and bonus accomplishments.
 
-```bash
-# create a new project in the current directory
-npx sv create
+Employees earn tickets by completing work that meets or exceeds defined metrics. The leaderboard displays the current standings, showing how many tickets each employee has earned. At the end of the challenge period, tickets serve as entries in a prize drawing.
 
-# create a new project in my-app
-npx sv create my-app
-```
+## Features
 
-## Developing
+- **Team-based metrics:** Each business unit can have its own set of metrics.
+- **Role-based Ticket assignment:** Managers can award tickets to their team's members for meeting standards. Admins can award work tickets or bonus tickets at their discretion.
+- **Leaderboard:** Real-time standings of all employees, showing ticket counts.
+- **Drawing entries:** Tickets act as entries for prize drawings at the end of the competition.
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+## Usage
 
-```bash
-npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
-
-## Building
-
-To create a production version of your app:
-
-```bash
-npm run build
-```
-
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+- Admin sets up teams, and team metrics, and assigns team members.
+- Admin/Managers log in and assign tickets to team members based on completed work and bonus achievements.
+- Employees can view their standings on the leaderboard. And if their account is linked to a team member can view specific metrics on how well they're doing.
+- At the end of the challenge, tickets are used as entries in a random prize drawing.
