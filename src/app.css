@@ -106,17 +106,74 @@ button:disabled {
   color: #9ca3af;
 }
 
+/* table styles */
+thead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  color: #99a1af;
+  text-transform: uppercase;
+  background-color: #374151;
+
+  th {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+  }
+}
+
+tbody {
+  align-items: center; 
+  border-bottom-width: 1px; 
+  border-color: #374151; 
+  background-color: #1F2937;
+    
+  td {
+    color: #99a1af;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem; 
+    padding-top: 1rem;
+    padding-bottom: 1rem; 
+    font-weight: 500; 
+    text-align: center; 
+    white-space: nowrap;  
+    border-width: 1px; 
+    border-color: #374151; 
+  }
+}
+
+tfoot {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  color: #99a1af;
+  text-transform: uppercase;
+  background-color: #374151;
+
+  td {
+    font-weight: bold;
+    text-align: center;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+  }
+}
+
 /* admin table styles */
 .admin-table {
   width: 100%;
   overflow-x: auto;
   display: block;
-
-  /* Tailwind equivalents */
-  text-align: center;              /* text-center */
-  font-size: 0.75rem;               /* text-xs */
-  min-width: 100%;                  /* min-w-full */
-  color: #1f2937;                   /* dark:text-gray-800 fallback */
+  text-align: center;
+  font-size: 0.75rem;         /* text-xs */
+  min-width: 100%;
+  color: #1f2937;           /* dark:text-gray-800 fallback */
 }
 
 @media (min-width: 768px) {
@@ -125,13 +182,12 @@ button:disabled {
     margin: 0 auto;
     display: table;
     overflow-x: visible;
-    font-size: 1rem; /* md:text-base */
+    font-size: 1rem;
   }
 }
 
-/* Dark mode text color */
 .dark .admin-table {
-  color: #1f2937; /* Tailwind's gray-800 */
+  color: #1f2937;           /* Tailwind's gray-800 */
 }
 
 .admin-table th,
