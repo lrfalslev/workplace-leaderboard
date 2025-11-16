@@ -154,3 +154,63 @@
 		</div>
 	</form>
 </Modal>
+
+<style>
+    :global(thead) {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        font-size: 0.75rem;
+        line-height: 1rem;
+        color: #99a1af;
+        text-transform: uppercase;
+        background-color: #374151;
+		
+		:global(th) {
+			padding-left: 1.5rem;
+			padding-right: 1.5rem;
+			padding-top: 0.75rem;
+			padding-bottom: 0.75rem;
+		}
+    }
+
+    :global(tbody) {
+        align-items: center; 
+        border-bottom-width: 1px; 
+        border-color: #374151; 
+        background-color: #1F2937;
+        
+        :global(td) {
+            color: #99a1af;
+            padding-left: 0.5rem;
+            padding-right: 0.5rem; 
+            padding-top: 1rem;
+            padding-bottom: 1rem; 
+            font-weight: 500; 
+            text-align: center; 
+            white-space: nowrap;  
+            border-width: 1px; 
+            border-color: #374151; 
+        }
+    }
+
+    :global(tfoot) {
+        position: sticky;
+        bottom: 0;
+        z-index: 10;
+        font-size: 0.75rem;
+        line-height: 1rem;
+        color: #99a1af;
+        text-transform: uppercase;
+        background-color: #374151;
+
+        :global(td) {
+            font-weight: bold;
+            text-align: center;
+            padding-left: 1.5rem;
+            padding-right: 1.5rem;
+            padding-top: 0.75rem;
+            padding-bottom: 0.75rem;
+        }
+    }
+</style>
