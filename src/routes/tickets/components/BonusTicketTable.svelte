@@ -2,7 +2,7 @@
     import { showAlert } from "$lib/stores/alert";
     import { user } from "$lib/stores/user";
     import type { BonusTicket, TeamMember } from "$lib/types";
-    import { Button, Card, Input, Modal, Table, TableBody, TableBodyCell, TableBodyRow, TableHead, TableHeadCell } from "flowbite-svelte";
+    import { Button, Card, Input, Modal } from "flowbite-svelte";
     import { CirclePlusSolid, EditSolid, TrashBinSolid } from "flowbite-svelte-icons";
     import { onMount } from "svelte";
 
@@ -175,52 +175,54 @@
             </Button>
         </div>
     </div>
-    <div class="overflow-y-auto border-3 dark:border-gray-700 rounded-xl">
-        <Card class="max-w-full">
-            <Table class="text-center w-full table-fixed p-0">
-                <TableHead>
-                    <TableHeadCell>Date</TableHeadCell>
-                    <TableHeadCell>Name</TableHeadCell>
-                    <TableHeadCell>Description</TableHeadCell>
-                    <TableHeadCell>Tickets</TableHeadCell>
-                    <TableHeadCell>Awarded By</TableHeadCell>
-                    <TableHeadCell> 
-                        <span class="sr-only">Edit</span> 
-                    </TableHeadCell>
-                </TableHead>
-                <TableBody>
+    <div class="overflow-y-auto rounded-xl">
+        <Card class="max-w-full border-3 dark:border-gray-700 rounded-xl">
+            <table class="text-center w-full table-fixed p-0">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>Tickets</th>
+                        <th>Awarded By</th>
+                        <th> 
+                            <span class="sr-only">Edit</span> 
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
                     {#each tickets as ticket}
-                        <TableBodyRow class="items-center">
+                        <tr class="items-center">
                                 {#if editingId === ticket.id}
-                                    <TableBodyCell class="border dark:border-gray-700">
+                                    <td class="border dark:border-gray-700">
                                         <Input bind:value={formInputs[ticket.id].date} type="date" onkeydown={(e) => e.key === 'Enter' && handleSave(ticket.id)} />
-                                    </TableBodyCell>
-                                    <TableBodyCell class="border dark:border-gray-700">
+                                    </td>
+                                    <td class="border dark:border-gray-700">
                                         <select bind:value={formInputs[ticket.id].teamMemberId} class="custom-select">
                                             <option value="" disabled>Team Member</option>
                                             {#each teamMembers as teamMember}
                                                 <option value={teamMember.id}>{teamMember.name}</option>
                                             {/each}
                                         </select>
-                                    </TableBodyCell>
-                                    <TableBodyCell class="border dark:border-gray-700">
+                                    </td>
+                                    <td class="border dark:border-gray-700">
                                         <Input bind:value={formInputs[ticket.id].description} type="text" onkeydown={(e) => e.key === 'Enter' && handleSave(ticket.id)} />
-                                    </TableBodyCell>
-                                    <TableBodyCell class="border dark:border-gray-700">
+                                    </td>
+                                    <td class="border dark:border-gray-700">
                                         <Input bind:value={formInputs[ticket.id].ticketsAwarded} type="number" onkeydown={(e) => e.key === 'Enter' && handleSave(ticket.id)} />
-                                    </TableBodyCell>
-                                    <TableBodyCell class="border dark:border-gray-700">{$user?.username}</TableBodyCell>
-                                    <TableBodyCell class="border dark:border-gray-700">
+                                    </td>
+                                    <td class="border dark:border-gray-700">{$user?.username}</td>
+                                    <td class="border dark:border-gray-700">
                                         <Button size="xs" onclick={() => handleSave(ticket.id)}>Save</Button>
                                         <Button size="xs" onclick={() => editingId = null}>Cancel</Button>
-                                    </TableBodyCell>
+                                    </td>
                                 {:else}
-                                    <TableBodyCell class="border dark:border-gray-700">{ticket.date}</TableBodyCell>
-                                    <TableBodyCell class="border dark:border-gray-700">{ticket.teamMemberName}</TableBodyCell>
-                                    <TableBodyCell class="border dark:border-gray-700">{ticket.description}</TableBodyCell>
-                                    <TableBodyCell class="border dark:border-gray-700">{ticket.ticketsAwarded}</TableBodyCell>
-                                    <TableBodyCell class="border dark:border-gray-700">{ticket.managerName}</TableBodyCell>
-                                    <TableBodyCell class="border dark:border-gray-700">
+                                    <td class="border dark:border-gray-700">{ticket.date}</td>
+                                    <td class="border dark:border-gray-700">{ticket.teamMemberName}</td>
+                                    <td class="border dark:border-gray-700">{ticket.description}</td>
+                                    <td class="border dark:border-gray-700">{ticket.ticketsAwarded}</td>
+                                    <td class="border dark:border-gray-700">{ticket.managerName}</td>
+                                    <td class="border dark:border-gray-700">
                                         <div>
                                             <button type="button" onclick={() => startEditing(ticket)}>
                                                 <EditSolid class="dark:text-gray-400 dark:hover:text-white"/>
@@ -232,12 +234,12 @@
                                                 <TrashBinSolid class="dark:text-gray-400 dark:hover:text-white"/>
                                             </button>
                                         </div>
-                                    </TableBodyCell>
+                                    </td>
                                 {/if}
-                        </TableBodyRow>
+                        </tr>
                     {/each} 
-                </TableBody>
-            </Table>
+                </tbody>
+            </table>
         </Card>
     </div>
 </div>

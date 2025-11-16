@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { TableBodyRow, TableBodyCell, Input, Button, Tooltip } from "flowbite-svelte";
+    import { Input, Button, Tooltip } from "flowbite-svelte";
     import { EditSolid, ExclamationCircleSolid, TrashBinSolid } from "flowbite-svelte-icons";
     import { MetricType, UserRole, type Log, type Metric } from '$lib/types';
     import { onMount } from "svelte";
@@ -157,17 +157,17 @@
 </script>
 
 {#if isLoading}
-    <TableBodyRow>
-        <TableBodyCell colspan={teamMemberIds.length + 2}>
+    <tr>
+        <td colspan={teamMemberIds.length + 2}>
             Loading...
-        </TableBodyCell>
-    </TableBodyRow>
+        </td>
+    </tr>
 {:else}
-    <TableBodyRow class="items-center">
-        <TableBodyCell class="px-2 text-center">{row.date}</TableBodyCell>
+    <tr class="items-center">
+        <td class="px-2 text-center">{row.date}</td>
 
         {#each teamMemberIds as memberId (memberId)}
-            <TableBodyCell class="align-middle border dark:border-gray-700 p-2">
+            <td class="align-middle border dark:border-gray-700 p-2">
                 {#if isEditing}
                     {#each displayMetrics as metric (metric.id)}
                         <div class="relative flex flex-col items-center my-1">
@@ -209,10 +209,10 @@
                         <br />
                     {/each}
                 {/if}
-            </TableBodyCell>
+            </td>
         {/each}
 
-        <TableBodyCell class="align-middle">
+        <td class="align-middle">
             {#if isEditing}
                 <div class="flex flex-wrap justify-center gap-2 w-full">
                     <Button type="button" class="py-1 text-sm min-w-[60px]" onclick={handleSave}>Save</Button>
@@ -231,6 +231,6 @@
                     </button>
                 </div>
             {/if}
-        </TableBodyCell>
-    </TableBodyRow>
+        </td>
+    </tr>
 {/if}

@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { Input, Button, Card, Table, TableHead, TableHeadCell, TableBody, Datepicker, Checkbox } from "flowbite-svelte";
+    import { Input, Button, Card, Datepicker, Checkbox } from "flowbite-svelte";
     import { type TeamMember, type Log, type Metric, MetricType, UserRole } from '$lib/types';
     import EditableRow, { type Row } from "./EditableRow.svelte";
     import { CirclePlusSolid } from "flowbite-svelte-icons";
@@ -65,9 +65,8 @@
     });
 </script>
 
-<div class="h-[75vh] max-w-[80vw] table-fixed mx-auto flex flex-col">
+<div class="h-[75vh] w-[80vw] table-fixed mx-auto flex flex-col">
     <div class="flex justify-between items-start mb-4 mx-4"> 
-        
         {#if $user && $user.role == UserRole.ADMIN}
             <div class="flex gap-4">
                 <Datepicker range bind:rangeFrom={dateRange.from} bind:rangeTo={dateRange.to} disabled={allTime}/>
@@ -85,23 +84,25 @@
             </Button>
         </div>
     </div>
-    <div class="overflow-y-auto border-3 dark:border-gray-700 rounded-xl">
-        <Card class="max-w-full">
-            <Table class="text-center table-fixed p-0">
-                <TableHead>
-                    <TableHeadCell>Date</TableHeadCell>
-                    {#each teamMembers as { name } (name)}
-                        <TableHeadCell class="group relative">
-                            <div class="flex justify-center gap-2">
-                                {name}
-                            </div>
-                        </TableHeadCell>
-                    {/each} 
-                    <TableHeadCell> 
-                        <span class="sr-only">Edit</span> 
-                    </TableHeadCell>
-                </TableHead>
-                <TableBody>
+    <div class="overflow-y-auto rounded-xl">
+        <Card class="max-w-full border-3 dark:border-gray-700 rounded-xl">
+            <table class="w-full">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        {#each teamMembers as { name } (name)}
+                            <th class="group relative">
+                                <div class="flex justify-center gap-2">
+                                    {name}
+                                </div>
+                            </th>
+                        {/each} 
+                        <th> 
+                            <span class="sr-only">Edit</span> 
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
                     {#each filteredRows() as row (row.date)}
                         <EditableRow 
                             teamName={teamName}
@@ -113,44 +114,42 @@
                             isNew={row.date === newlyAddedDate}
                         />
                     {/each}
-                </TableBody>
-            </Table>
-        </Card>
-        {#if $user && $user.role == UserRole.ADMIN}
-            <div class="sticky bottom-0">
-                <Table class="text-center table-fixed">
-                    <TableHead>
-                        <TableHeadCell>
-                            {#each metrics as metric}
-                                {#if metric.type === MetricType.TICKET_ONLY}
-                                    {metric.qualifiedWorkLabel}<br />
-                                {:else}
-                                    <div class="truncate" title={`${metric.qualifiedWorkLabel} / ${metric.totalWorkLabel}`}>
-                                        {metric.qualifiedWorkLabel}/{metric.totalWorkLabel}
-                                    </div>
-                                {/if}
-                            {/each}
-                        </TableHeadCell>
-                        {#each teamMemberIds as memberId}
-                            <TableHeadCell>
+                </tbody>
+                {#if $user && $user.role == UserRole.ADMIN}
+                    <tfoot>
+                        <tr>
+                            <td>
                                 {#each metrics as metric}
-                                    {#if totals()[`${memberId}-${metric.id}`]}
-                                        {#if metric.type === MetricType.TICKET_ONLY}
-                                            {totals()[`${memberId}-${metric.id}`].qualified}
-                                        {:else}
-                                            {totals()[`${memberId}-${metric.id}`].qualified}/{totals()[`${memberId}-${metric.id}`].total}
-                                        {/if}
+                                    {#if metric.type === MetricType.TICKET_ONLY}
+                                        {metric.qualifiedWorkLabel}<br />
                                     {:else}
-                                    0
+                                        <div class="truncate max-w-[8rem]" title={`${metric.qualifiedWorkLabel} / ${metric.totalWorkLabel}`}>
+                                            {metric.qualifiedWorkLabel}/{metric.totalWorkLabel}
+                                        </div>
                                     {/if}
-                                    <br />
                                 {/each}
-                            </TableHeadCell>
-                        {/each}
-                        <TableHeadCell></TableHeadCell>
-                    </TableHead>
-                </Table>
-            </div>
-        {/if}
+                            </td>
+                            {#each teamMemberIds as memberId}
+                                <td>
+                                    {#each metrics as metric}
+                                        {#if totals()[`${memberId}-${metric.id}`]}
+                                            {#if metric.type === MetricType.TICKET_ONLY}
+                                                {totals()[`${memberId}-${metric.id}`].qualified}
+                                            {:else}
+                                                {totals()[`${memberId}-${metric.id}`].qualified}/{totals()[`${memberId}-${metric.id}`].total}
+                                            {/if}
+                                        {:else}
+                                            0
+                                        {/if}
+                                        <br />
+                                    {/each}
+                                </td>
+                            {/each}
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                {/if}
+            </table>
+        </Card>
     </div>
 </div>
