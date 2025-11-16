@@ -21,7 +21,7 @@
     const dateExists = $derived(() => rows.some(row => row.date === newDate));
         
     let dateRange = $state(getCurrentMonthBounds());
-    let allTime = $state(false);
+    let allTime = $state(!$user || $user.role !== UserRole.ADMIN);
 
     function getCurrentMonthBounds(): { from: Date; to: Date } {
         const now = new Date();
@@ -67,11 +67,14 @@
 
 <div class="h-[75vh] max-w-[80vw] table-fixed mx-auto flex flex-col">
     <div class="flex justify-between items-start mb-4 mx-4"> 
-        <div class="flex gap-4">
-            <Datepicker range bind:rangeFrom={dateRange.from} bind:rangeTo={dateRange.to} disabled={allTime}/>
-            <Checkbox bind:checked={allTime} type="checkbox" class="text-sm me-0">All Time</Checkbox>
-        </div>
-        <div class="flex gap-2">
+        
+        {#if $user && $user.role == UserRole.ADMIN}
+            <div class="flex gap-4">
+                <Datepicker range bind:rangeFrom={dateRange.from} bind:rangeTo={dateRange.to} disabled={allTime}/>
+                <Checkbox bind:checked={allTime} type="checkbox" class="text-sm me-0">All Time</Checkbox>
+            </div>
+        {/if}
+        <div class="flex gap-2 ml-auto">
             <Input bind:value={newDate} type="date" onkeydown={(e) => e.key === 'Enter' && addRow(newDate)}/>
             <Button
                 aria-label="Add new row"
