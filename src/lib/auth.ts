@@ -16,7 +16,8 @@ export async function verifyPassword(password: string, hashed: string): Promise<
 const SECRET = process.env.JWT_SECRET as string;
 
 export function generateToken(userId: number): string {
-    if (!SECRET) throw new Error('JWT_SECRET not set');
+    if (!SECRET) 
+        throw new Error('JWT_SECRET not set');
     return jwt.sign({ userId }, SECRET, { expiresIn: '1d' });
 }
 

@@ -57,7 +57,7 @@
       setTimeout(() => {
         window.print();
         showWork = showBonus = false;
-      }, 100);
+      }, 10);
     }
     
     $: workTickets = memberSummaries.flatMap(m =>
@@ -88,7 +88,7 @@
   <div class="p-4 bg-gray-800 rounded mb-6">
       {#if isLoading}
           <div class="text-center py-8 text-gray-500 dark:text-gray-400">
-              Loading tickets...
+              Loading data...
           </div>
       {:else}
         <h2 class="text-lg font-bold mb-4 dark:text-gray-200 text-center">Ticket Summary</h2>
@@ -134,7 +134,7 @@
       margin: 0.25in;
   }
   
-  :global(td) {
+  td {
     padding-top: 0rem !important;
     padding-bottom: 0rem !important;
   }
