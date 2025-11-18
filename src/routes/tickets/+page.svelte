@@ -333,8 +333,8 @@
 </Modal>
 
 <style>
-  :global([role="tabpanel"]) {
-    margin-top: 0 !important;
-    border-top-left-radius: 0 !important;
-  }
+    :global([role="tabpanel"]) {
+        margin-top: 0 !important;
+        border-top-left-radius: 0 !important;
+    }
 </style>

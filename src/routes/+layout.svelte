@@ -2,7 +2,6 @@
 	import "../app.css";
 	import { Button, Modal, Input, Alert } from "flowbite-svelte";
 	import { ExclamationCircleSolid, EyeOutline,  EyeSlashOutline } from "flowbite-svelte-icons";
-	import { goto, invalidate } from "$app/navigation";
     import { UserRole } from "$lib/types";
 	import { user } from '$lib/stores/user';
 	import { alertMessage } from '$lib/stores/alert';
@@ -90,6 +89,7 @@
 			</Button>
 			<Button href="/tickets" class="py-1 m-0 mt-1" color="alternative">Tickets</Button>
 			<Button href="/admin" class="py-1 m-0 mt-1" color="alternative">Admin</Button>
+			<Button href="/drawing" class="py-1 m-0 mt-1" color="alternative">Drawing</Button>
 			<Button class="py-1 m-0 mt-1 mr-1" color="alternative" onclick={handleLogout}>Logout</Button>
 		</nav>
 	{:else if $user && $user.role == UserRole.MANAGER}

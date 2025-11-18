@@ -1,8 +1,9 @@
 <script lang="ts">
-    import { TableBodyRow, TableBodyCell, Input, Button, Tooltip } from "flowbite-svelte";
+    import { Input, Button, Tooltip } from "flowbite-svelte";
     import { EditSolid, ExclamationCircleSolid, TrashBinSolid } from "flowbite-svelte-icons";
-    import { MetricType, type Log, type Metric } from '$lib/types';
+    import { MetricType, UserRole, type Log, type Metric } from '$lib/types';
     import { onMount } from "svelte";
+    import { user } from "$lib/stores/user";
 
     export type Row = {
         date: string;
@@ -37,7 +38,9 @@
         Object.keys(memberLogs).some(metricId => 
             metrics.find(m => m.id === Number(metricId))?.isLegacy
         )
-    );
+    );    
+    
+    const canEditRow = !hasLegacyMetric || ($user && $user.role === UserRole.ADMIN);
 
     const displayMetrics = hasLegacyMetric
         ? metrics.filter(m => m.isLegacy)
@@ -154,17 +157,17 @@
 </script>
 
 {#if isLoading}
-    <TableBodyRow>
-        <TableBodyCell colspan={teamMemberIds.length + 2}>
+    <tr>
+        <td colspan={teamMemberIds.length + 2}>
             Loading...
-        </TableBodyCell>
-    </TableBodyRow>
+        </td>
+    </tr>
 {:else}
-    <TableBodyRow class="items-center">
-        <TableBodyCell class="px-2 text-center">{row.date}</TableBodyCell>
+    <tr class="items-center">
+        <td class="px-2 text-center">{row.date}</td>
 
         {#each teamMemberIds as memberId (memberId)}
-            <TableBodyCell class="align-middle border dark:border-gray-700 p-2">
+            <td class="align-middle border dark:border-gray-700 p-2">
                 {#if isEditing}
                     {#each displayMetrics as metric (metric.id)}
                         <div class="relative flex flex-col items-center my-1">
@@ -206,10 +209,10 @@
                         <br />
                     {/each}
                 {/if}
-            </TableBodyCell>
+            </td>
         {/each}
 
-        <TableBodyCell class="align-middle">
+        <td class="align-middle">
             {#if isEditing}
                 <div class="flex flex-wrap justify-center gap-2 w-full">
                     <Button type="button" class="py-1 text-sm min-w-[60px]" onclick={handleSave}>Save</Button>
@@ -217,14 +220,17 @@
                 </div>
             {:else}
                 <div>
-                    <button type="button" onclick={toggleEditing} disabled={hasLegacyMetric}>
+                    <button type="button" onclick={toggleEditing} disabled={!canEditRow}>
                         <EditSolid class="dark:text-gray-400 dark:hover:text-white"/>
                     </button>
+                    {#if !canEditRow}
+                        <Tooltip>Only Admins Can Edit Legacy Tickets</Tooltip>
+                    {/if}
                     <button type="button" onclick={handleDelete}>
                         <TrashBinSolid class="dark:text-gray-400 dark:hover:text-white"/>
                     </button>
                 </div>
             {/if}
-        </TableBodyCell>
-    </TableBodyRow>
+        </td>
+    </tr>
 {/if}
